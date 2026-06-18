@@ -1,0 +1,2864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Property Reply — BMV Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ─── TOKENS ─────────────────────────────────────────────── */
+  :root {
+    --navy:      #0B1628;
+    --navy-mid:  #142038;
+    --ink:       #1C2B40;
+    --steel:     #2E4060;
+    --slate:     #4A6080;
+    --mist:      #E8EDF4;
+    --white:     #FFFFFF;
+    --gold:      #D4A843;
+    --gold-lt:   #F0C96A;
+    --green:     #22C87A;
+    --red:       #E84040;
+    --amber:     #F0A020;
+    --radius:    10px;
+    --radius-lg: 18px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ─── UTILITIES ──────────────────────────────────────────── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  .section { padding: 80px 0; }
+  .section-alt { background: var(--navy-mid); }
+  .section-dark { background: var(--ink); }
+  .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: rgba(212,168,67,.15);
+    color: var(--gold);
+    border: 1px solid rgba(212,168,67,.3);
+  }
+  .badge-green { background: rgba(34,200,122,.15); color: var(--green); border-color: rgba(34,200,122,.3); }
+  .badge-red   { background: rgba(232,64,64,.15);  color: var(--red);   border-color: rgba(232,64,64,.3); }
+  .badge-amber { background: rgba(240,160,32,.15); color: var(--amber); border-color: rgba(240,160,32,.3); }
+  .badge-blue  { background: rgba(74,96,128,.2);   color: #90b4d8;      border-color: rgba(74,96,128,.4); }
+
+  h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
+  h1 { font-size: clamp(2.4rem,5vw,4rem); font-weight: 800; line-height: 1.1; }
+  h2 { font-size: clamp(1.7rem,3vw,2.4rem); font-weight: 700; line-height: 1.2; }
+  h3 { font-size: 1.2rem; font-weight: 700; }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .gold { color: var(--gold); }
+  .green { color: var(--green); }
+  .muted { color: var(--slate); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Syne', sans-serif; font-weight: 600; font-size: .9rem;
+    padding: 12px 24px; border-radius: var(--radius); border: none;
+    cursor: pointer; transition: all .2s; text-decoration: none;
+  }
+  .btn-gold   { background: var(--gold); color: var(--navy); }
+  .btn-gold:hover { background: var(--gold-lt); transform: translateY(-1px); }
+  .btn-outline { background: transparent; border: 1.5px solid rgba(255,255,255,.2); color: var(--white); }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-green  { background: var(--green); color: var(--navy); }
+  .btn-sm     { padding: 8px 16px; font-size: .82rem; }
+  .btn-red    { background: var(--red); color: var(--white); }
+
+  .card {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+  }
+  .card-hover:hover {
+    border-color: rgba(212,168,67,.3);
+    transform: translateY(-3px);
+    transition: all .25s;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: rgba(255,255,255,.06);
+    border: 1.5px solid rgba(255,255,255,.12);
+    border-radius: var(--radius);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: .9rem;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  input::placeholder, textarea::placeholder { color: var(--slate); }
+  input:focus, select:focus, textarea:focus { border-color: var(--gold); }
+  select option { background: var(--navy-mid); }
+  label { font-size: .83rem; font-weight: 500; color: #a0b4c8; margin-bottom: 6px; display: block; }
+
+  .form-group { margin-bottom: 18px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; }
+
+  @media(max-width:768px) {
+    .grid-2,.grid-3,.grid-4 { grid-template-columns: 1fr; }
+    .section { padding: 50px 0; }
+  }
+
+  /* ─── PAGE NAVIGATION ────────────────────────────────────── */
+  .page-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: rgba(11,22,40,.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .page-nav .container {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 14px; padding-bottom: 14px;
+  }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; color: var(--white); text-decoration: none; }
+  .logo span { color: var(--gold); }
+  .nav-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .nav-link {
+    font-size: .82rem; font-weight: 500; color: #9ab0c8;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    transition: all .18s; border: none; background: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .nav-link:hover, .nav-link.active { color: var(--gold); background: rgba(212,168,67,.1); }
+
+  /* ─── SECTION JUMP NAV ──────────────────────────────────── */
+  .jump-nav {
+    background: var(--navy-mid);
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .jump-nav .container { padding-top: 0; padding-bottom: 0; }
+  .jump-nav a {
+    display: inline-block;
+    font-size: .78rem; font-weight: 500; letter-spacing: .04em;
+    color: var(--slate); text-decoration: none;
+    padding: 11px 16px;
+    border-bottom: 2px solid transparent;
+    transition: all .18s;
+  }
+  .jump-nav a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ─── HERO ───────────────────────────────────────────────── */
+  .hero {
+    padding: 160px 0 100px;
+    background: var(--navy);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: -200px; right: -200px;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(212,168,67,.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: '';
+    position: absolute; bottom: -100px; left: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(34,200,122,.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  .hero-eyebrow { margin-bottom: 20px; }
+  .hero h1 { margin-bottom: 20px; }
+  .hero-desc { font-size: 1.05rem; color: #8aa4bc; margin-bottom: 36px; max-width: 480px; }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero-stats { display: flex; gap: 32px; margin-top: 48px; padding-top: 32px; border-top: 1px solid rgba(255,255,255,.08); }
+  .stat-item h3 { font-size: 1.8rem; color: var(--gold); }
+  .stat-item p  { font-size: .8rem; color: var(--slate); }
+
+  /* Search Widget */
+  .hero-search {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+  }
+  .hero-search h3 { margin-bottom: 20px; font-size: 1rem; color: #b0c4d8; }
+  .search-bar {
+    display: flex; gap: 8px;
+    background: rgba(255,255,255,.05);
+    border: 1.5px solid rgba(255,255,255,.12);
+    border-radius: var(--radius);
+    padding: 6px;
+    margin-bottom: 16px;
+  }
+  .search-bar input { background: none; border: none; padding: 8px 10px; }
+  .search-bar .btn { flex-shrink: 0; padding: 10px 20px; }
+  .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .recent-deals { margin-top: 20px; }
+  .mini-deal {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .mini-deal:last-child { border-bottom: none; }
+  .mini-deal-info p { font-size: .82rem; font-weight: 600; }
+  .mini-deal-info span { font-size: .74rem; color: var(--slate); }
+  .discount-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .78rem; font-weight: 500;
+    background: rgba(34,200,122,.15); color: var(--green);
+    padding: 3px 10px; border-radius: 20px;
+    border: 1px solid rgba(34,200,122,.25);
+  }
+
+  /* ─── LISTINGS ───────────────────────────────────────────── */
+  .listings-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
+  }
+  .filters-bar {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;
+  }
+  .filters-bar .form-group { margin: 0; flex: 1; min-width: 140px; }
+  .filters-bar label { font-size: .75rem; }
+  .sort-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .sort-btn {
+    font-size: .78rem; padding: 6px 14px;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 20px; background: none; color: #8aa4bc;
+    cursor: pointer; transition: all .18s;
+  }
+  .sort-btn.active, .sort-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(212,168,67,.08); }
+
+  .property-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; }
+  @media(max-width:900px){ .property-grid { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:580px){ .property-grid { grid-template-columns: 1fr; } }
+
+  .property-card {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all .25s;
+    cursor: pointer;
+  }
+  .property-card:hover { border-color: rgba(212,168,67,.3); transform: translateY(-3px); }
+  .prop-img {
+    height: 190px;
+    background: linear-gradient(135deg, var(--steel) 0%, var(--ink) 100%);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .prop-img-placeholder { font-size: 3rem; opacity: .3; }
+  .prop-discount {
+    position: absolute; top: 12px; left: 12px;
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 1rem; background: var(--green); color: var(--navy);
+    padding: 4px 12px; border-radius: 6px;
+  }
+  .prop-featured {
+    position: absolute; top: 12px; right: 12px;
+    font-size: .7rem; background: var(--gold); color: var(--navy);
+    padding: 3px 8px; border-radius: 4px; font-weight: 700;
+  }
+  .prop-lock {
+    position: absolute; inset: 0;
+    background: rgba(11,22,40,.7); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;
+    color: var(--slate); font-size: .85rem;
+  }
+  .prop-lock svg { opacity: .5; }
+  .prop-body { padding: 18px 20px; }
+  .prop-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+  .prop-location { font-size: .8rem; color: var(--slate); margin-bottom: 12px; }
+  .prop-prices {
+    display: flex; justify-content: space-between;
+    margin-bottom: 12px; padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .price-col p { font-size: .7rem; color: var(--slate); }
+  .price-col h4 { font-family: 'JetBrains Mono', monospace; font-size: .95rem; }
+  .price-col h4.asking { color: var(--gold); }
+  .price-col h4.market { color: var(--slate); text-decoration: line-through; font-size: .8rem; }
+  .prop-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .prop-footer { display: flex; justify-content: space-between; align-items: center; }
+  .prop-footer .btn { font-size: .78rem; padding: 7px 16px; }
+  .prop-meta { font-size: .74rem; color: var(--slate); }
+
+  .pagination {
+    display: flex; justify-content: center; gap: 8px;
+    margin-top: 40px;
+  }
+  .pg-btn {
+    width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; border: 1px solid rgba(255,255,255,.12);
+    background: none; color: #8aa4bc; cursor: pointer;
+    font-size: .85rem; font-family: 'Inter', sans-serif;
+    transition: all .18s;
+  }
+  .pg-btn.active { background: var(--gold); color: var(--navy); border-color: var(--gold); font-weight: 700; }
+  .pg-btn:hover:not(.active) { border-color: var(--gold); color: var(--gold); }
+
+  /* ─── DEAL ANALYSIS ─────────────────────────────────────── */
+  .analysis-card {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .analysis-header {
+    background: var(--ink);
+    padding: 20px 28px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+  }
+  .analysis-body { padding: 28px; }
+  .analysis-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; margin-bottom: 28px; }
+  @media(max-width:700px){ .analysis-grid { grid-template-columns: 1fr 1fr; } }
+  .metric-box {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .metric-box .label { font-size: .72rem; color: var(--slate); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+  .metric-box .value { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 500; }
+  .metric-box .sub { font-size: .75rem; color: var(--slate); margin-top: 2px; }
+  .discount-meter { margin-bottom: 24px; }
+  .meter-track {
+    height: 8px; background: rgba(255,255,255,.08);
+    border-radius: 4px; overflow: hidden; margin: 8px 0;
+  }
+  .meter-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--green) 100%);
+    transition: width .6s ease;
+  }
+  .calc-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+    font-size: .88rem;
+  }
+  .calc-row:last-child { border-bottom: none; }
+  .calc-row .lbl { color: var(--slate); }
+  .calc-row .val { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+  .calc-row .val.pos { color: var(--green); }
+  .calc-row .val.neg { color: var(--red); }
+  .calc-row.total .val { color: var(--gold); font-size: 1.05rem; }
+
+  /* ─── MEMBERSHIP ─────────────────────────────────────────── */
+  .membership-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+  @media(max-width:760px){ .membership-grid { grid-template-columns: 1fr; } }
+  .plan-card {
+    border-radius: var(--radius-lg);
+    padding: 32px 28px;
+    position: relative;
+    overflow: hidden;
+    border: 1.5px solid rgba(255,255,255,.08);
+    background: var(--navy-mid);
+    transition: all .25s;
+  }
+  .plan-card.featured {
+    border-color: var(--gold);
+    background: linear-gradient(160deg, rgba(212,168,67,.1) 0%, var(--navy-mid) 100%);
+  }
+  .plan-card.vip {
+    border-color: rgba(212,168,67,.4);
+    background: linear-gradient(160deg, rgba(212,168,67,.15) 0%, var(--navy-mid) 100%);
+  }
+  .plan-badge {
+    position: absolute; top: 18px; right: 18px;
+    font-size: .7rem; font-weight: 700;
+    background: var(--gold); color: var(--navy);
+    padding: 3px 10px; border-radius: 20px;
+  }
+  .plan-price {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 2.4rem; margin: 16px 0 4px;
+  }
+  .plan-price span { font-size: 1rem; color: var(--slate); }
+  .plan-desc { font-size: .85rem; color: var(--slate); margin-bottom: 24px; }
+  .plan-features { list-style: none; margin-bottom: 28px; }
+  .plan-features li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: .87rem; padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    color: #c0d4e8;
+  }
+  .plan-features li:last-child { border-bottom: none; }
+  .check { color: var(--green); flex-shrink: 0; }
+  .cross { color: var(--slate); flex-shrink: 0; }
+
+  /* ─── SUBMIT LISTING ─────────────────────────────────────── */
+  .submit-form {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    max-width: 860px; margin: 0 auto;
+  }
+  .submit-header {
+    background: var(--ink);
+    padding: 24px 32px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .submit-body { padding: 32px; }
+  .step-indicator {
+    display: flex; gap: 0; margin-bottom: 32px;
+    background: rgba(255,255,255,.04);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .step {
+    flex: 1; padding: 12px; text-align: center;
+    font-size: .78rem; font-weight: 500; color: var(--slate);
+    border-right: 1px solid rgba(255,255,255,.07);
+    transition: all .2s;
+  }
+  .step:last-child { border-right: none; }
+  .step.active { background: rgba(212,168,67,.15); color: var(--gold); }
+  .step.done { background: rgba(34,200,122,.1); color: var(--green); }
+  .form-section-title {
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: .95rem; margin-bottom: 18px;
+    padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.07);
+    color: #c0d4e8;
+  }
+  .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .checkbox-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .83rem; color: #c0d4e8; cursor: pointer;
+    padding: 8px 12px;
+    border: 1px solid rgba(255,255,255,.08); border-radius: 8px;
+    transition: all .18s;
+  }
+  .checkbox-item:hover { border-color: var(--gold); }
+  .checkbox-item input[type=checkbox] { width: auto; accent-color: var(--gold); }
+  .image-upload {
+    border: 2px dashed rgba(255,255,255,.15); border-radius: var(--radius);
+    padding: 40px; text-align: center; cursor: pointer;
+    transition: border-color .2s;
+  }
+  .image-upload:hover { border-color: var(--gold); }
+  .image-upload p { color: var(--slate); font-size: .88rem; }
+  .upload-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: .4; }
+  .form-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; flex-wrap: wrap; gap: 12px; }
+
+  /* ─── USER DASHBOARD ─────────────────────────────────────── */
+  .dashboard-layout { display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: start; }
+  @media(max-width:900px){ .dashboard-layout { grid-template-columns: 1fr; } }
+  .sidebar {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: var(--radius-lg);
+    padding: 24px 0;
+    position: sticky; top: 90px;
+  }
+  .sidebar-profile {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    margin-bottom: 12px; text-align: center;
+  }
+  .avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold) 0%, #a07030 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800;
+    color: var(--navy); margin: 0 auto 12px;
+  }
+  .sidebar-profile h4 { font-size: .95rem; }
+  .sidebar-profile p { font-size: .78rem; color: var(--slate); }
+  .sidebar-profile .tag { margin-top: 8px; }
+  .sidebar-nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; font-size: .88rem;
+    color: #8aa4bc; text-decoration: none; cursor: pointer;
+    transition: all .18s; border-left: 3px solid transparent;
+  }
+  .sidebar-nav a:hover, .sidebar-nav a.active {
+    color: var(--gold); background: rgba(212,168,67,.07);
+    border-left-color: var(--gold);
+  }
+  .sidebar-nav a span.icon { font-size: 1rem; width: 20px; }
+  .sidebar-divider {
+    height: 1px; background: rgba(255,255,255,.07);
+    margin: 10px 20px;
+  }
+  .dashboard-main { display: flex; flex-direction: column; gap: 22px; }
+  .dash-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+  @media(max-width:700px){ .dash-stats { grid-template-columns: 1fr 1fr; } }
+  .dash-stat {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  .dash-stat .ds-label { font-size: .73rem; color: var(--slate); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+  .dash-stat .ds-value { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.7rem; }
+  .dash-stat .ds-change { font-size: .75rem; margin-top: 3px; }
+  .ds-change.up { color: var(--green); }
+  .ds-change.dn { color: var(--red); }
+  .dash-table {
+    width: 100%; border-collapse: collapse;
+    font-size: .87rem;
+  }
+  .dash-table th {
+    text-align: left; font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--slate); font-weight: 500;
+    padding: 0 16px 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .dash-table td {
+    padding: 12px 16px 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    color: #c0d4e8;
+  }
+  .status-dot {
+    display: inline-block;
+    width: 7px; height: 7px; border-radius: 50%;
+    margin-right: 6px;
+  }
+
+  /* ─── AFFILIATE ──────────────────────────────────────────── */
+  .affiliate-hero {
+    background: linear-gradient(135deg, rgba(212,168,67,.15) 0%, rgba(11,22,40,0) 100%);
+    border: 1px solid rgba(212,168,67,.2);
+    border-radius: var(--radius-lg);
+    padding: 36px;
+    margin-bottom: 28px;
+  }
+  .ref-link-box {
+    display: flex; gap: 10px; align-items: center;
+    background: rgba(255,255,255,.06);
+    border: 1.5px solid rgba(255,255,255,.12);
+    border-radius: var(--radius); padding: 12px 16px;
+    margin-top: 18px;
+  }
+  .ref-link-box code {
+    flex: 1; font-family: 'JetBrains Mono', monospace;
+    font-size: .85rem; color: var(--gold); overflow: hidden; text-overflow: ellipsis;
+  }
+  .leaderboard-row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+  .lb-rank {
+    font-family: 'JetBrains Mono', monospace; font-size: .85rem;
+    width: 30px; color: var(--slate); flex-shrink: 0;
+  }
+  .lb-rank.top3 { color: var(--gold); font-weight: 700; }
+  .lb-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--steel); display: flex; align-items: center;
+    justify-content: center; font-size: .9rem; flex-shrink: 0;
+  }
+  .lb-name { flex: 1; font-size: .9rem; font-weight: 500; }
+  .lb-earnings { font-family: 'JetBrains Mono', monospace; color: var(--gold); font-size: .9rem; }
+  .lb-bar-wrap { width: 100px; height: 6px; background: rgba(255,255,255,.08); border-radius: 3px; }
+  .lb-bar { height: 100%; border-radius: 3px; background: var(--gold); }
+
+  /* ─── ADMIN PANEL ────────────────────────────────────────── */
+  .admin-header {
+    background: var(--ink);
+    padding: 18px 28px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+  }
+  .admin-layout { display: grid; grid-template-columns: 200px 1fr; gap: 24px; }
+  @media(max-width:800px){ .admin-layout { grid-template-columns: 1fr; } }
+  .admin-sidebar {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: var(--radius-lg);
+    padding: 16px 0;
+  }
+  .admin-nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 18px; font-size: .85rem; color: #8aa4bc;
+    cursor: pointer; transition: all .18s;
+    border-left: 3px solid transparent;
+  }
+  .admin-nav-item:hover, .admin-nav-item.active {
+    color: var(--white); background: rgba(255,255,255,.05);
+    border-left-color: var(--gold);
+  }
+  .admin-card {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 22px;
+  }
+  .admin-card-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+  }
+  .admin-card-body { padding: 24px; }
+  .admin-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  .admin-table th {
+    text-align: left; padding: 0 14px 10px 0;
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--slate); font-weight: 500;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .admin-table td {
+    padding: 10px 14px 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    color: #c0d4e8; vertical-align: middle;
+  }
+  .action-btns { display: flex; gap: 6px; }
+  .action-btns .btn { font-size: .75rem; padding: 5px 12px; }
+
+  /* ─── KYC / COMPLIANCE ───────────────────────────────────── */
+  .kyc-flow {
+    max-width: 720px; margin: 0 auto;
+  }
+  .kyc-steps {
+    display: flex; justify-content: space-between;
+    margin-bottom: 40px; position: relative;
+  }
+  .kyc-steps::before {
+    content: '';
+    position: absolute; top: 20px; left: 0; right: 0;
+    height: 2px; background: rgba(255,255,255,.08); z-index: 0;
+  }
+  .kyc-step {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    position: relative; z-index: 1; flex: 1;
+  }
+  .kyc-step-num {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: .9rem;
+    border: 2px solid rgba(255,255,255,.15);
+    background: var(--navy); color: var(--slate);
+  }
+  .kyc-step.done .kyc-step-num { background: var(--green); border-color: var(--green); color: var(--navy); }
+  .kyc-step.active .kyc-step-num { background: var(--gold); border-color: var(--gold); color: var(--navy); }
+  .kyc-step p { font-size: .72rem; color: var(--slate); text-align: center; }
+  .kyc-step.active p { color: var(--gold); }
+  .kyc-card {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+  }
+  .verification-badge {
+    display: flex; align-items: center; gap: 16px;
+    background: rgba(34,200,122,.08);
+    border: 1px solid rgba(34,200,122,.2);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .verification-badge .v-icon { font-size: 2rem; }
+  .verification-badge h4 { color: var(--green); font-size: .95rem; }
+  .verification-badge p { font-size: .82rem; color: var(--slate); }
+  .compliance-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+    font-size: .87rem;
+  }
+  .compliance-row .c-label { color: #c0d4e8; }
+  .compliance-row .c-status { display: flex; align-items: center; gap: 6px; font-size: .82rem; }
+
+  /* ─── NOTIFICATIONS ──────────────────────────────────────── */
+  .notif-item {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+  .notif-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+  .notif-body h5 { font-size: .88rem; font-weight: 600; margin-bottom: 3px; }
+  .notif-body p { font-size: .8rem; color: var(--slate); }
+  .notif-body .time { font-size: .72rem; color: #5a7090; margin-top: 4px; }
+  .notif-unread { background: rgba(212,168,67,.08); margin: 0 -28px; padding: 14px 28px; border-left: 3px solid var(--gold); }
+
+  /* ─── TRUST PAGES ────────────────────────────────────────── */
+  .trust-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media(max-width:680px){ .trust-cards { grid-template-columns: 1fr; } }
+  .trust-card {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+  }
+  .trust-card h3 { margin-bottom: 14px; font-size: 1.05rem; }
+  .trust-card p { font-size: .87rem; color: #8aa4bc; line-height: 1.7; }
+  .trust-card p + p { margin-top: 10px; }
+  .inline-link { color: var(--gold); text-decoration: none; }
+  .inline-link:hover { text-decoration: underline; }
+
+  /* ─── AUTH PAGES ─────────────────────────────────────────── */
+  .auth-split { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+  @media(max-width:760px){ .auth-split { grid-template-columns: 1fr; } }
+  .auth-brand {
+    background: var(--navy-mid);
+    border-right: 1px solid rgba(255,255,255,.07);
+    padding: 60px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .auth-form-panel { padding: 60px 48px; display: flex; flex-direction: column; justify-content: center; }
+  @media(max-width:760px){ .auth-brand { display: none; } }
+  .auth-form { max-width: 400px; }
+  .auth-form h2 { margin-bottom: 8px; }
+  .auth-form .sub { color: var(--slate); font-size: .88rem; margin-bottom: 28px; }
+  .divider-text {
+    display: flex; align-items: center; gap: 14px;
+    font-size: .78rem; color: var(--slate); margin: 20px 0;
+  }
+  .divider-text::before, .divider-text::after {
+    content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.1);
+  }
+  .social-btn {
+    width: 100%; padding: 12px; border-radius: var(--radius);
+    border: 1.5px solid rgba(255,255,255,.12);
+    background: none; color: var(--white); cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: .88rem;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: border-color .2s;
+  }
+  .social-btn:hover { border-color: rgba(255,255,255,.25); }
+  .forgot-link { font-size: .8rem; color: var(--slate); text-decoration: none; }
+  .forgot-link:hover { color: var(--gold); }
+
+  /* ─── GENERAL EMPTY STATES ───────────────────────────────── */
+  .empty-state {
+    text-align: center; padding: 60px 30px;
+    color: var(--slate);
+  }
+  .empty-state .icon { font-size: 3rem; opacity: .3; margin-bottom: 16px; }
+  .empty-state p { font-size: .9rem; margin-bottom: 18px; }
+
+  /* ─── ALERTS & TOASTS ────────────────────────────────────── */
+  .alert {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 14px 18px; border-radius: var(--radius);
+    font-size: .87rem; margin-bottom: 16px;
+  }
+  .alert-info { background: rgba(74,96,128,.2); border: 1px solid rgba(74,96,128,.4); color: #90b4d8; }
+  .alert-success { background: rgba(34,200,122,.1); border: 1px solid rgba(34,200,122,.25); color: var(--green); }
+  .alert-warn { background: rgba(240,160,32,.1); border: 1px solid rgba(240,160,32,.25); color: var(--amber); }
+  .alert-error { background: rgba(232,64,64,.1); border: 1px solid rgba(232,64,64,.25); color: var(--red); }
+
+  /* ─── PROFILE ────────────────────────────────────────────── */
+  .profile-header-card {
+    background: linear-gradient(135deg, var(--navy-mid) 0%, var(--ink) 100%);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: var(--radius-lg); padding: 36px;
+    display: flex; gap: 28px; align-items: center; flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .profile-avatar-lg {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold) 0%, #a07030 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800;
+    color: var(--navy); flex-shrink: 0;
+    border: 3px solid rgba(212,168,67,.4);
+  }
+  .profile-info h2 { margin-bottom: 6px; }
+  .profile-info .profile-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+  .profile-meta-item { font-size: .8rem; color: var(--slate); display: flex; align-items: center; gap: 5px; }
+
+  /* ─── FOOTER ─────────────────────────────────────────────── */
+  footer {
+    background: var(--ink);
+    border-top: 1px solid rgba(255,255,255,.07);
+    padding: 60px 0 30px;
+  }
+  .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+  @media(max-width:700px){ .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; } }
+  .footer-brand p { font-size: .85rem; color: var(--slate); margin-top: 12px; line-height: 1.7; }
+  .footer-col h5 { font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+  .footer-col a { display: block; font-size: .85rem; color: var(--slate); text-decoration: none; margin-bottom: 9px; transition: color .18s; }
+  .footer-col a:hover { color: var(--white); }
+  .footer-bottom {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 28px; border-top: 1px solid rgba(255,255,255,.06);
+    flex-wrap: wrap; gap: 12px;
+    font-size: .8rem; color: var(--slate);
+  }
+  .footer-bottom a { color: var(--slate); text-decoration: none; }
+  .footer-bottom a:hover { color: var(--gold); }
+  .footer-legal { display: flex; gap: 20px; flex-wrap: wrap; }
+
+  /* ─── SMOOTH SECTION TRANSITIONS ────────────────────────── */
+  .page-section { display: none; }
+  .page-section.active { display: block; }
+
+  /* For demo we show all sections stacked */
+  .page-section { display: block; }
+
+  /* ─── MISC ───────────────────────────────────────────────── */
+  .divider { height: 1px; background: rgba(255,255,255,.07); margin: 28px 0; }
+  .text-center { text-align: center; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-16 { margin-bottom: 16px; }
+  .mb-24 { margin-bottom: 24px; }
+  .mb-32 { margin-bottom: 32px; }
+  .mt-16 { margin-top: 16px; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+
+  .inline-flex { display: inline-flex; align-items: center; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .74rem; padding: 3px 10px; border-radius: 20px;
+    background: rgba(255,255,255,.07); color: #9ab0c8;
+    border: 1px solid rgba(255,255,255,.1);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--navy); }
+  ::-webkit-scrollbar-thumb { background: var(--steel); border-radius: 3px; }
+
+  /* ─── REPORTING MODAL ────────────────────────────────────── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7); backdrop-filter: blur(6px);
+    z-index: 2000; display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: var(--radius-lg);
+    width: 100%; max-width: 500px;
+    padding: 32px;
+  }
+  .modal h3 { margin-bottom: 6px; }
+  .modal .sub { color: var(--slate); font-size: .85rem; margin-bottom: 24px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     NAVIGATION
+═══════════════════════════════════════════════════════ -->
+<nav class="page-nav">
+  <div class="container">
+    <a href="#hero" class="logo">Property<span>Reply</span></a>
+    <div class="nav-links">
+      <button class="nav-link active">Browse Deals</button>
+      <button class="nav-link">Submit Deal</button>
+      <button class="nav-link">Membership</button>
+      <button class="nav-link">Dashboard</button>
+      <button class="nav-link">Affiliate</button>
+      <button class="nav-link">Admin</button>
+      <a href="#auth" class="btn btn-outline btn-sm">Sign In</a>
+      <a href="#auth" class="btn btn-gold btn-sm">Join Free</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Section Jump Nav -->
+<div class="jump-nav" style="margin-top:66px;">
+  <div class="container">
+    <a href="#hero">Home</a>
+    <a href="#listings">Listings</a>
+    <a href="#deal-analysis">Deal Analysis</a>
+    <a href="#membership">Membership</a>
+    <a href="#submit">Submit Deal</a>
+    <a href="#dashboard">Dashboard</a>
+    <a href="#profile">Profile</a>
+    <a href="#affiliate">Affiliate</a>
+    <a href="#admin">Admin Panel</a>
+    <a href="#kyc">KYC / Compliance</a>
+    <a href="#notifications">Notifications</a>
+    <a href="#auth">Sign In / Register</a>
+    <a href="#trust">Trust & Legal</a>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════════════ -->
+<section class="hero" id="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-eyebrow">
+          <span class="tag">UK's #1 BMV Marketplace</span>
+        </div>
+        <h1>Find Deals <span class="gold">Below Market</span> Value</h1>
+        <p class="hero-desc">Access thousands of verified below-market-value properties across the UK. From flips to HMOs, every deal analysed and ready to act on.</p>
+        <div class="hero-actions">
+          <a href="#listings" class="btn btn-gold">Browse Live Deals ↓</a>
+          <a href="#submit" class="btn btn-outline">Submit a Deal</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <h3>2,400+</h3>
+            <p>Active Listings</p>
+          </div>
+          <div class="stat-item">
+            <h3>£180M</h3>
+            <p>Total Deal Value</p>
+          </div>
+          <div class="stat-item">
+            <h3>31%</h3>
+            <p>Avg Discount</p>
+          </div>
+          <div class="stat-item">
+            <h3>18K+</h3>
+            <p>Members</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="hero-search">
+          <h3>🔍 Search BMV Deals</h3>
+          <div class="search-bar">
+            <input type="text" placeholder="Postcode, town or city…">
+            <button class="btn btn-gold btn-sm">Search</button>
+          </div>
+          <div class="filter-row">
+            <select>
+              <option>All Property Types</option>
+              <option>House</option>
+              <option>Flat</option>
+              <option>HMO</option>
+              <option>Commercial</option>
+              <option>Land</option>
+            </select>
+            <select>
+              <option>Any Price</option>
+              <option>Under £100k</option>
+              <option>£100k–£200k</option>
+              <option>£200k–£350k</option>
+              <option>£350k+</option>
+            </select>
+            <select>
+              <option>Min Discount</option>
+              <option>10%+</option>
+              <option>20%+</option>
+              <option>30%+</option>
+              <option>40%+</option>
+            </select>
+            <select>
+              <option>Investment Strategy</option>
+              <option>Flip</option>
+              <option>Buy-to-Let</option>
+              <option>HMO</option>
+              <option>Commercial Conversion</option>
+            </select>
+          </div>
+          <div class="recent-deals">
+            <p style="font-size:.75rem;color:var(--slate);margin-bottom:10px;">RECENTLY ADDED</p>
+            <div class="mini-deal">
+              <div class="mini-deal-info">
+                <p>3-bed terrace — Manchester</p>
+                <span>£124,000 asking · £178k market</span>
+              </div>
+              <span class="discount-pill">▼ 30%</span>
+            </div>
+            <div class="mini-deal">
+              <div class="mini-deal-info">
+                <p>Commercial unit — Leeds</p>
+                <span>£89,500 asking · £145k market</span>
+              </div>
+              <span class="discount-pill">▼ 38%</span>
+            </div>
+            <div class="mini-deal">
+              <div class="mini-deal-info">
+                <p>HMO 5-bed — Birmingham</p>
+                <span>£195,000 asking · £260k market</span>
+              </div>
+              <span class="discount-pill">▼ 25%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     PROPERTY LISTINGS
+═══════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="listings">
+  <div class="container">
+    <div class="listings-header">
+      <div>
+        <div class="tag mb-8">Live Deals</div>
+        <h2>Available Properties</h2>
+        <p class="muted" style="margin-top:6px;">Showing 48 of 2,412 deals · Updated 4 minutes ago</p>
+      </div>
+      <div class="sort-row">
+        <span style="font-size:.8rem;color:var(--slate);">Sort:</span>
+        <button class="sort-btn active">Newest</button>
+        <button class="sort-btn">Highest Discount</button>
+        <button class="sort-btn">Lowest Price</button>
+        <button class="sort-btn">Yield</button>
+      </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" placeholder="Any location">
+      </div>
+      <div class="form-group">
+        <label>Property Type</label>
+        <select>
+          <option>All Types</option>
+          <option>House</option>
+          <option>Flat</option>
+          <option>HMO</option>
+          <option>Commercial</option>
+          <option>Land</option>
+          <option>Bungalow</option>
+          <option>Detached</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Price Range</label>
+        <select>
+          <option>Any Price</option>
+          <option>Under £75k</option>
+          <option>£75k–£150k</option>
+          <option>£150k–£300k</option>
+          <option>£300k–£500k</option>
+          <option>£500k+</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Min Discount %</label>
+        <select>
+          <option>Any</option>
+          <option>10%+</option>
+          <option>20%+</option>
+          <option>25%+</option>
+          <option>30%+</option>
+          <option>40%+</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Strategy</label>
+        <select>
+          <option>All Strategies</option>
+          <option>Flip</option>
+          <option>Buy-to-Let</option>
+          <option>HMO</option>
+          <option>Commercial Conversion</option>
+          <option>Serviced Accommodation</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Bedrooms</label>
+        <select>
+          <option>Any</option>
+          <option>1+</option>
+          <option>2+</option>
+          <option>3+</option>
+          <option>4+</option>
+          <option>5+</option>
+        </select>
+      </div>
+      <button class="btn btn-gold btn-sm" style="align-self:flex-end;">Apply Filters</button>
+    </div>
+
+    <!-- Property Grid -->
+    <div class="property-grid">
+
+      <!-- Card 1 – Full access (Premium) -->
+      <div class="property-card">
+        <div class="prop-img">
+          <span class="prop-img-placeholder">🏠</span>
+          <span class="prop-discount">▼ 34%</span>
+          <span class="prop-featured">⭐ Featured</span>
+        </div>
+        <div class="prop-body">
+          <h4 class="prop-title">3-Bed End Terrace, Manchester</h4>
+          <p class="prop-location">📍 Salford, Greater Manchester · M6</p>
+          <div class="prop-prices">
+            <div class="price-col">
+              <p>Asking Price</p>
+              <h4 class="asking">£118,000</h4>
+            </div>
+            <div class="price-col" style="text-align:right;">
+              <p>Market Value</p>
+              <h4 class="market">£178,000</h4>
+            </div>
+            <div class="price-col" style="text-align:right;">
+              <p>Saving</p>
+              <h4 style="color:var(--green);">£60,000</h4>
+            </div>
+          </div>
+          <div class="prop-tags">
+            <span class="tag badge-green">BTL</span>
+            <span class="tag badge-blue">Flip</span>
+            <span class="tag">🛏 3 bed</span>
+            <span class="tag">🏚 House</span>
+          </div>
+          <div class="prop-footer">
+            <button class="btn btn-gold btn-sm">View Deal →</button>
+            <span class="prop-meta">Added 2h ago · 12 saves</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 – Locked (Free member) -->
+      <div class="property-card">
+        <div class="prop-img">
+          <span class="prop-img-placeholder">🏢</span>
+          <span class="prop-discount">▼ 41%</span>
+          <div class="prop-lock">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Premium Required</span>
+            <button class="btn btn-gold btn-sm" style="margin-top:6px;">Upgrade</button>
+          </div>
+        </div>
+        <div class="prop-body">
+          <h4 class="prop-title">Commercial Unit — Leeds City Centre</h4>
+          <p class="prop-location">📍 Leeds, West Yorkshire · LS1</p>
+          <div class="prop-prices">
+            <div class="price-col">
+              <p>Asking Price</p>
+              <h4 class="asking">£89,500</h4>
+            </div>
+            <div class="price-col" style="text-align:right;">
+              <p>Market Value</p>
+              <h4 class="market">£152,000</h4>
+            </div>
+          </div>
+          <div class="prop-tags">
+            <span class="tag badge-amber">Commercial</span>
+            <span class="tag">🏢 Office</span>
+          </div>
+          <div class="prop-footer">
+            <button class="btn btn-outline btn-sm">🔒 Unlock</button>
+            <span class="prop-meta">Added 5h ago</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="property-card">
+        <div class="prop-img">
+          <span class="prop-img-placeholder">🏘</span>
+          <span class="prop-discount">▼ 28%</span>
+        </div>
+        <div class="prop-body">
+          <h4 class="prop-title">5-Bed HMO — Birmingham</h4>
+          <p class="prop-location">📍 Aston, Birmingham · B6</p>
+          <div class="prop-prices">
+            <div class="price-col">
+              <p>Asking Price</p>
+              <h4 class="asking">£195,000</h4>
+            </div>
+            <div class="price-col" style="text-align:right;">
+              <p>Market Value</p>
+              <h4 class="market">£270,000</h4>
+            </div>
+            <div class="price-col" style="text-align:right;">
+              <p>Saving</p>
+              <h4 style="color:var(--green);">£75,000</h4>
+            </div>
+          </div>
+          <div class="prop-tags">
+            <span class="tag badge-green">HMO</span>
+            <span class="tag">🛏 5 bed</span>
+            <span class="tag">📊 9.2% yield</span>
+          </div>
+          <div class="prop-footer">
+            <button class="btn btn-gold btn-sm">View Deal →</button>
+            <span class="prop-meta">Added 1d ago · 38 saves</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="property-card">
+        <div class="prop-img">
+          <span class="prop-img-placeholder">🏡</span>
+          <span class="prop-discount">▼ 22%</span>
+        </div>
+        <div class="prop-body">
+          <h4 class="prop-title">2-Bed Flat — Sheffield</h4>
+          <p class="prop-location">📍 Hillsborough, Sheffield · S6</p>
+          <div class="prop-prices">
+            <div class="price-col">
+              <p>Asking Price</p>
+              <h4 class="asking">£72,000</h4>
+            </div>
+            <div class="price-col" style="text-align:right;">
+              <p>Market Value</p>
+              <h4 class="market">£92,000</h4>
+            </div>
+          </div>
+          <div class="prop-tags">
+            <span class="tag badge-blue">BTL</span>
+            <span class="tag">🛏 2 bed</span>
+            <span class="tag">🏢 Flat</span>
+          </div>
+          <div class="prop-footer">
+            <button class="btn btn-gold btn-sm">View Deal →</button>
+            <span class="prop-meta">Added 2d ago</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 5 – Locked -->
+      <div class="property-card">
+        <div class="prop-img">
+          <span class="prop-img-placeholder">🌿</span>
+          <span class="prop-discount">▼ 35%</span>
+          <div class="prop-lock">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>VIP Required</span>
+            <button class="btn btn-gold btn-sm" style="margin-top:6px;">Upgrade to VIP</button>
+          </div>
+        </div>
+        <div class="prop-body">
+          <h4 class="prop-title">Development Land — Nottingham</h4>
+          <p class="prop-location">📍 Beeston, Nottingham · NG9</p>
+          <div class="prop-prices">
+            <div class="price-col">
+              <p>Asking Price</p>
+              <h4 class="asking">£145,000</h4>
+            </div>
+            <div class="price-col" style="text-align:right;">
+              <p>Market Value</p>
+              <h4 class="market">£223,000</h4>
+            </div>
+          </div>
+          <div class="prop-tags">
+            <span class="tag badge-amber">Land</span>
+            <span class="tag">🏗 Dev. Opportunity</span>
+          </div>
+          <div class="prop-footer">
+            <button class="btn btn-outline btn-sm">🔒 VIP Only</button>
+            <span class="prop-meta">Added 3d ago</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="property-card">
+        <div class="prop-img">
+          <span class="prop-img-placeholder">🏠</span>
+          <span class="prop-discount">▼ 26%</span>
+          <span class="prop-featured">⭐ Featured</span>
+        </div>
+        <div class="prop-body">
+          <h4 class="prop-title">4-Bed Detached — Liverpool</h4>
+          <p class="prop-location">📍 Walton, Liverpool · L4</p>
+          <div class="prop-prices">
+            <div class="price-col">
+              <p>Asking Price</p>
+              <h4 class="asking">£162,000</h4>
+            </div>
+            <div class="price-col" style="text-align:right;">
+              <p>Market Value</p>
+              <h4 class="market">£219,000</h4>
+            </div>
+          </div>
+          <div class="prop-tags">
+            <span class="tag badge-blue">Flip</span>
+            <span class="tag badge-green">BTL</span>
+            <span class="tag">🛏 4 bed</span>
+          </div>
+          <div class="prop-footer">
+            <button class="btn btn-gold btn-sm">View Deal →</button>
+            <span class="prop-meta">Added 4d ago · 51 saves</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /property-grid -->
+
+    <div class="pagination">
+      <button class="pg-btn">‹</button>
+      <button class="pg-btn active">1</button>
+      <button class="pg-btn">2</button>
+      <button class="pg-btn">3</button>
+      <button class="pg-btn">4</button>
+      <button class="pg-btn">…</button>
+      <button class="pg-btn">48</button>
+      <button class="pg-btn">›</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     DEAL ANALYSIS
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="deal-analysis">
+  <div class="container">
+    <div class="tag mb-8">Premium Feature</div>
+    <h2 class="mb-32">Deal Analysis — 3-Bed Terrace, Manchester</h2>
+
+    <div class="analysis-card">
+      <div class="analysis-header">
+        <div>
+          <h3 style="font-size:1.05rem;">📍 12 Oakfield Road, Salford, M6 5PX</h3>
+          <p style="color:var(--slate);font-size:.82rem;margin-top:4px;">Submitted by: J. Thompson · Verified Seller <span class="tag badge-green" style="margin-left:8px;">✓ KYC Passed</span></p>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-outline btn-sm">❤ Save</button>
+          <button class="btn btn-outline btn-sm">⚑ Report</button>
+          <button class="btn btn-gold btn-sm">Contact Seller</button>
+        </div>
+      </div>
+
+      <div class="analysis-body">
+        <div class="analysis-grid">
+          <div class="metric-box">
+            <div class="label">Asking Price</div>
+            <div class="value gold">£118,000</div>
+            <div class="sub">Negotiable</div>
+          </div>
+          <div class="metric-box">
+            <div class="label">Market Value</div>
+            <div class="value">£178,000</div>
+            <div class="sub">Est. via comparables</div>
+          </div>
+          <div class="metric-box">
+            <div class="label">Discount</div>
+            <div class="value green">34%</div>
+            <div class="sub">£60,000 below market</div>
+          </div>
+          <div class="metric-box">
+            <div class="label">Est. Rental Yield</div>
+            <div class="value">7.4%</div>
+            <div class="sub">~£730/month gross</div>
+          </div>
+        </div>
+
+        <div class="discount-meter mb-24">
+          <div class="flex-between mb-8">
+            <span style="font-size:.82rem;color:var(--slate);">Discount calculator</span>
+            <span class="mono" style="font-size:.82rem;color:var(--gold);">34% Below Market Value</span>
+          </div>
+          <div class="meter-track">
+            <div class="meter-fill" style="width:68%;"></div>
+          </div>
+          <div class="flex-between" style="font-size:.72rem;color:var(--slate);margin-top:4px;">
+            <span>0%</span>
+            <span style="color:var(--gold);">34% discount</span>
+            <span>50%</span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <p class="form-section-title">📊 Flip Analysis</p>
+            <div class="calc-row">
+              <span class="lbl">Purchase Price</span>
+              <span class="val">£118,000</span>
+            </div>
+            <div class="calc-row">
+              <span class="lbl">Stamp Duty</span>
+              <span class="val neg">- £3,600</span>
+            </div>
+            <div class="calc-row">
+              <span class="lbl">Refurbishment (est.)</span>
+              <span class="val neg">- £18,000</span>
+            </div>
+            <div class="calc-row">
+              <span class="lbl">Legal & Finance Costs</span>
+              <span class="val neg">- £2,400</span>
+            </div>
+            <div class="calc-row">
+              <span class="lbl">Total Investment</span>
+              <span class="val">£142,000</span>
+            </div>
+            <div class="calc-row">
+              <span class="lbl">Estimated Sale Price</span>
+              <span class="val green">£182,000</span>
+            </div>
+            <div class="divider"></div>
+            <div class="calc-row total">
+              <span class="lbl" style="font-weight:600;">Gross Profit Potential</span>
+              <span class="val">£40,000</span>
+            </div>
+          </div>
+          <div>
+            <p class="form-section-title">🏠 Buy-to-Let Analysis</p>
+            <div class="calc-row">
+              <span class="lbl">Gross Monthly Rent</span>
+              <span class="val green">£730</span>
+            </div>
+            <div class="calc-row">
+              <span class="lbl">Annual Gross Rent</span>
+              <span class="val green">£8,760</span>
+            </div>
+            <div class="calc-row">
+              <span class="lbl">Gross Yield</span>
+              <span class="val">7.4%</span>
+            </div>
+            <div class="calc-row">
+              <span class="lbl">Est. Mortgage (75% LTV)</span>
+              <span class="val neg">- £440/mo</span>
+            </div>
+            <div class="calc-row">
+              <span class="lbl">Management (10%)</span>
+              <span class="val neg">- £73/mo</span>
+            </div>
+            <div class="calc-row">
+              <span class="lbl">Insurance & Maintenance</span>
+              <span class="val neg">- £60/mo</span>
+            </div>
+            <div class="divider"></div>
+            <div class="calc-row total">
+              <span class="lbl" style="font-weight:600;">Net Monthly Cashflow</span>
+              <span class="val">£157/mo</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:28px; padding:20px; background:rgba(255,255,255,.04); border-radius:var(--radius); border:1px solid rgba(255,255,255,.07);">
+          <p class="form-section-title">📝 Seller's Description</p>
+          <p style="font-size:.88rem;color:#a0b8cc;line-height:1.8;">3-bedroom end-of-terrace house requiring cosmetic refurbishment. Property has been vacant for 8 months, vendor motivated to sell quickly due to relocation. Gas central heating, double glazed throughout. Rear garden. Close to schools and transport links. Chain-free. Similar sold comparables in the area range from £168k–£188k. Vendor will consider quick cash offers.</p>
+        </div>
+
+        <div style="margin-top:24px;">
+          <p class="form-section-title">📞 Contact Details <span class="tag" style="margin-left:8px;">Premium Only</span></p>
+          <div class="grid-2" style="gap:12px;">
+            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:14px;">
+              <p style="font-size:.75rem;color:var(--slate);">Name</p>
+              <p style="font-size:.9rem;font-weight:600;">James Thompson</p>
+            </div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:14px;">
+              <p style="font-size:.75rem;color:var(--slate);">Phone</p>
+              <p style="font-size:.9rem;font-weight:600;">07912 ••• ••• <span style="font-size:.75rem;color:var(--slate);">(Upgrade to see)</span></p>
+            </div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:14px;">
+              <p style="font-size:.75rem;color:var(--slate);">Email</p>
+              <p style="font-size:.9rem;font-weight:600;">j.thom••••@••••.co.uk</p>
+            </div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:14px;">
+              <p style="font-size:.75rem;color:var(--slate);">Role</p>
+              <p style="font-size:.9rem;font-weight:600;">Sourcing Agent</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     MEMBERSHIP
+═══════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="membership">
+  <div class="container text-center">
+    <div class="tag mb-16">Membership Plans</div>
+    <h2 class="mb-8">Choose Your Access Level</h2>
+    <p class="muted mb-32">Upgrade to unlock full deal data, contact details, and advanced analysis.</p>
+
+    <div class="membership-grid">
+      <!-- Free -->
+      <div class="plan-card">
+        <div class="tag badge-blue">Free</div>
+        <div class="plan-price">£0<span>/mo</span></div>
+        <p class="plan-desc">Get started and browse limited deal information.</p>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Browse up to 10 deals/month</li>
+          <li><span class="check">✓</span> See asking price &amp; location</li>
+          <li><span class="check">✓</span> Basic search filters</li>
+          <li><span class="cross">✗</span> Contact details</li>
+          <li><span class="cross">✗</span> Full deal analysis</li>
+          <li><span class="cross">✗</span> Unlimited searches</li>
+          <li><span class="cross">✗</span> Submit listings</li>
+          <li><span class="cross">✗</span> Email deal alerts</li>
+        </ul>
+        <button class="btn btn-outline" style="width:100%;">Current Plan</button>
+      </div>
+
+      <!-- Premium -->
+      <div class="plan-card featured">
+        <div class="plan-badge">Most Popular</div>
+        <div class="tag badge-green">Premium</div>
+        <div class="plan-price">£29<span>/mo</span></div>
+        <p class="plan-desc">Full access to listings, analysis, and contact details.</p>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Unlimited deal browsing</li>
+          <li><span class="check">✓</span> Full contact details revealed</li>
+          <li><span class="check">✓</span> Complete deal analysis (Flip + BTL)</li>
+          <li><span class="check">✓</span> Unlimited searches & filters</li>
+          <li><span class="check">✓</span> Submit listings (up to 10/mo)</li>
+          <li><span class="check">✓</span> Email deal alerts</li>
+          <li><span class="check">✓</span> Save & favourite properties</li>
+          <li><span class="cross">✗</span> VIP-only exclusive deals</li>
+        </ul>
+        <button class="btn btn-gold" style="width:100%;">Upgrade to Premium →</button>
+      </div>
+
+      <!-- VIP -->
+      <div class="plan-card vip">
+        <div class="tag">VIP</div>
+        <div class="plan-price">£79<span>/mo</span></div>
+        <p class="plan-desc">The complete platform with exclusive off-market deals.</p>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Everything in Premium</li>
+          <li><span class="check">✓</span> VIP-exclusive off-market deals</li>
+          <li><span class="check">✓</span> Unlimited listing submissions</li>
+          <li><span class="check">✓</span> Priority listing approval</li>
+          <li><span class="check">✓</span> Dedicated account manager</li>
+          <li><span class="check">✓</span> Advanced analytics dashboard</li>
+          <li><span class="check">✓</span> Affiliate commission boost (+5%)</li>
+          <li><span class="check">✓</span> Early access to new features</li>
+        </ul>
+        <button class="btn btn-gold" style="width:100%;background:var(--gold-lt);">Upgrade to VIP →</button>
+      </div>
+    </div>
+
+    <p style="margin-top:24px;font-size:.82rem;color:var(--slate);">All plans billed monthly. Cancel anytime. Membership renewal reminders sent 7 days before each billing date.</p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SUBMIT LISTING
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="submit">
+  <div class="container">
+    <div class="tag mb-8">Submit a Deal</div>
+    <h2 class="mb-8">List a BMV Property</h2>
+    <p class="muted mb-32">Share below-market deals with thousands of active investors. All submissions are reviewed before going live.</p>
+
+    <div class="submit-form">
+      <div class="submit-header">
+        <h3>New Property Listing</h3>
+        <p style="color:var(--slate);font-size:.82rem;">All fields marked * are required</p>
+      </div>
+      <div class="submit-body">
+
+        <div class="step-indicator">
+          <div class="step done">✓ Property Details</div>
+          <div class="step active">📍 Location & Pricing</div>
+          <div class="step">📸 Images</div>
+          <div class="step">📞 Contact</div>
+          <div class="step">✅ Review</div>
+        </div>
+
+        <!-- Step 1: Property Details -->
+        <p class="form-section-title">🏠 Property Information</p>
+        <div class="form-group">
+          <label>Property Title *</label>
+          <input type="text" placeholder="e.g. 3-Bed Terrace – Motivated Seller, Manchester">
+        </div>
+        <div class="form-group">
+          <label>Property Description *</label>
+          <textarea rows="4" placeholder="Describe the property, its condition, why it's a good deal, any known issues…"></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Property Type *</label>
+            <select>
+              <option>-- Select --</option>
+              <option>House – Terraced</option>
+              <option>House – Semi-Detached</option>
+              <option>House – Detached</option>
+              <option>Flat / Apartment</option>
+              <option>Bungalow</option>
+              <option>HMO</option>
+              <option>Commercial</option>
+              <option>Land</option>
+              <option>Mixed Use</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Number of Bedrooms *</label>
+            <select>
+              <option>-- Select --</option>
+              <option>Studio</option>
+              <option>1</option>
+              <option>2</option>
+              <option>3</option>
+              <option>4</option>
+              <option>5</option>
+              <option>6+</option>
+              <option>N/A (Commercial/Land)</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="form-section-title" style="margin-top:24px;">📍 Location & Pricing</p>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Street Address</label>
+            <input type="text" placeholder="e.g. 15 Oak Street">
+          </div>
+          <div class="form-group">
+            <label>Postcode *</label>
+            <input type="text" placeholder="e.g. M6 5AB">
+          </div>
+          <div class="form-group">
+            <label>Town / City *</label>
+            <input type="text" placeholder="e.g. Manchester">
+          </div>
+          <div class="form-group">
+            <label>County</label>
+            <input type="text" placeholder="e.g. Greater Manchester">
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="form-group">
+            <label>Asking Price * (£)</label>
+            <input type="number" placeholder="e.g. 118000">
+          </div>
+          <div class="form-group">
+            <label>Estimated Market Value * (£)</label>
+            <input type="number" placeholder="e.g. 178000">
+          </div>
+          <div class="form-group">
+            <label>Discount % (auto-calculated)</label>
+            <input type="text" placeholder="Will auto-calculate" readonly style="background:rgba(212,168,67,.07);color:var(--gold);">
+          </div>
+        </div>
+
+        <p class="form-section-title" style="margin-top:24px;">🏷 Investment Strategy Tags *</p>
+        <div class="checkbox-grid">
+          <label class="checkbox-item"><input type="checkbox"> Flip / Refurbishment</label>
+          <label class="checkbox-item"><input type="checkbox"> Buy-to-Let</label>
+          <label class="checkbox-item"><input type="checkbox"> HMO</label>
+          <label class="checkbox-item"><input type="checkbox"> Commercial Conversion</label>
+          <label class="checkbox-item"><input type="checkbox"> Serviced Accommodation</label>
+          <label class="checkbox-item"><input type="checkbox"> Development Land</label>
+          <label class="checkbox-item"><input type="checkbox"> BRRR Strategy</label>
+          <label class="checkbox-item"><input type="checkbox"> Lease Option</label>
+          <label class="checkbox-item"><input type="checkbox"> Mixed Use</label>
+        </div>
+
+        <p class="form-section-title" style="margin-top:24px;">📸 Property Images</p>
+        <div class="image-upload">
+          <div class="upload-icon">📷</div>
+          <p>Drag and drop images here, or click to browse</p>
+          <p style="margin-top:6px;font-size:.78rem;">Supports JPG, PNG, WebP · Max 10MB per image · Up to 20 images</p>
+          <button class="btn btn-outline btn-sm" style="margin-top:14px;">Browse Files</button>
+        </div>
+
+        <p class="form-section-title" style="margin-top:24px;">📞 Contact Details</p>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Your Name *</label>
+            <input type="text" placeholder="Full name">
+          </div>
+          <div class="form-group">
+            <label>Role *</label>
+            <select>
+              <option>-- Select --</option>
+              <option>Property Owner</option>
+              <option>Sourcing Agent</option>
+              <option>Estate Agent</option>
+              <option>Solicitor</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Phone Number *</label>
+            <input type="tel" placeholder="e.g. 07700 900000">
+          </div>
+          <div class="form-group">
+            <label>Email Address *</label>
+            <input type="email" placeholder="your@email.co.uk">
+          </div>
+        </div>
+
+        <div class="alert alert-warn">
+          <span>⚠️</span>
+          <div>All listings are reviewed within 24–48 hours. Inaccurate, misleading, or spam listings will be removed and may result in account suspension.</div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-outline">← Previous Step</button>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-outline">Save as Draft</button>
+            <button class="btn btn-gold">Submit Listing →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     USER DASHBOARD
+═══════════════════════════════════════════════════════ -->
+<section class="section section-dark" id="dashboard">
+  <div class="container">
+    <div class="tag mb-8">Member Area</div>
+    <h2 class="mb-32">My Dashboard</h2>
+
+    <div class="dashboard-layout">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-profile">
+          <div class="avatar">JS</div>
+          <h4>James Smith</h4>
+          <p>james@smith.co.uk</p>
+          <span class="tag badge-green" style="display:inline-block;margin-top:8px;">Premium Member</span>
+        </div>
+        <nav class="sidebar-nav">
+          <a class="active"><span class="icon">📊</span> Overview</a>
+          <a><span class="icon">🏠</span> Saved Properties</a>
+          <a><span class="icon">❤️</span> Favourites</a>
+          <a><span class="icon">📝</span> My Submissions</a>
+          <a><span class="icon">💳</span> Membership</a>
+          <a><span class="icon">🤝</span> Affiliate</a>
+          <div class="sidebar-divider"></div>
+          <a><span class="icon">👤</span> Profile Settings</a>
+          <a><span class="icon">🔔</span> Notifications</a>
+          <a><span class="icon">🔐</span> Security</a>
+          <a><span class="icon">✅</span> KYC Status</a>
+          <div class="sidebar-divider"></div>
+          <a style="color:var(--red);"><span class="icon">↩</span> Sign Out</a>
+        </nav>
+      </div>
+
+      <!-- Main -->
+      <div class="dashboard-main">
+
+        <!-- Stats -->
+        <div class="dash-stats">
+          <div class="dash-stat">
+            <div class="ds-label">Saved Deals</div>
+            <div class="ds-value gold">24</div>
+            <div class="ds-change up">↑ 3 this week</div>
+          </div>
+          <div class="dash-stat">
+            <div class="ds-label">Submissions</div>
+            <div class="ds-value">7</div>
+            <div class="ds-change up">5 live, 2 pending</div>
+          </div>
+          <div class="dash-stat">
+            <div class="ds-label">Affiliate Earnings</div>
+            <div class="ds-value green">£340</div>
+            <div class="ds-change up">↑ £85 this month</div>
+          </div>
+          <div class="dash-stat">
+            <div class="ds-label">Referrals</div>
+            <div class="ds-value">12</div>
+            <div class="ds-change up">↑ 2 this week</div>
+          </div>
+        </div>
+
+        <!-- Membership Status Card -->
+        <div class="card">
+          <div class="flex-between mb-16">
+            <h3>💳 Membership Status</h3>
+            <span class="tag badge-green">Premium · Active</span>
+          </div>
+          <div class="grid-3" style="gap:14px;">
+            <div>
+              <p style="font-size:.75rem;color:var(--slate);">Plan</p>
+              <p style="font-weight:600;">Premium Monthly</p>
+            </div>
+            <div>
+              <p style="font-size:.75rem;color:var(--slate);">Renews</p>
+              <p style="font-weight:600;">12 July 2026</p>
+            </div>
+            <div>
+              <p style="font-size:.75rem;color:var(--slate);">Price</p>
+              <p style="font-weight:600;">£29.00 / month</p>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-gold btn-sm">Upgrade to VIP</button>
+            <button class="btn btn-outline btn-sm">Manage Billing</button>
+            <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:rgba(232,64,64,.3);">Cancel</button>
+          </div>
+        </div>
+
+        <!-- My Submissions -->
+        <div class="card">
+          <div class="flex-between mb-16">
+            <h3>📝 My Submissions</h3>
+            <a href="#submit" class="btn btn-gold btn-sm">+ Submit New</a>
+          </div>
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Location</th>
+                <th>Price</th>
+                <th>Discount</th>
+                <th>Status</th>
+                <th>Submitted</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>3-Bed Terrace</td>
+                <td>Manchester</td>
+                <td class="mono">£118k</td>
+                <td><span class="discount-pill">34%</span></td>
+                <td><span class="status-dot" style="background:var(--green);"></span>Live</td>
+                <td>02 Jun 26</td>
+              </tr>
+              <tr>
+                <td>5-Bed HMO</td>
+                <td>Birmingham</td>
+                <td class="mono">£195k</td>
+                <td><span class="discount-pill">28%</span></td>
+                <td><span class="status-dot" style="background:var(--green);"></span>Live</td>
+                <td>28 May 26</td>
+              </tr>
+              <tr>
+                <td>Commercial Unit</td>
+                <td>Leeds</td>
+                <td class="mono">£89k</td>
+                <td><span class="discount-pill">41%</span></td>
+                <td><span class="status-dot" style="background:var(--amber);"></span>Pending Review</td>
+                <td>09 Jun 26</td>
+              </tr>
+              <tr>
+                <td>2-Bed Flat</td>
+                <td>Sheffield</td>
+                <td class="mono">£72k</td>
+                <td><span class="discount-pill">22%</span></td>
+                <td><span class="status-dot" style="background:var(--red);"></span>Rejected</td>
+                <td>01 Jun 26</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Saved Properties -->
+        <div class="card">
+          <div class="flex-between mb-16">
+            <h3>❤️ Saved & Favourite Properties</h3>
+            <span style="font-size:.8rem;color:var(--slate);">24 saved</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(255,255,255,.04);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);">
+              <div>
+                <p style="font-weight:600;font-size:.9rem;">3-Bed Terrace — Manchester</p>
+                <p style="font-size:.78rem;color:var(--slate);">£118k asking · 34% below market · Added 2h ago</p>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-gold btn-sm">View</button>
+                <button class="btn btn-outline btn-sm">✕</button>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(255,255,255,.04);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);">
+              <div>
+                <p style="font-weight:600;font-size:.9rem;">4-Bed Detached — Liverpool</p>
+                <p style="font-size:.78rem;color:var(--slate);">£162k asking · 26% below market · Saved yesterday</p>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-gold btn-sm">View</button>
+                <button class="btn btn-outline btn-sm">✕</button>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(255,255,255,.04);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);">
+              <div>
+                <p style="font-weight:600;font-size:.9rem;">5-Bed HMO — Birmingham</p>
+                <p style="font-size:.78rem;color:var(--slate);">£195k asking · 28% below market · Saved 3d ago</p>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-gold btn-sm">View</button>
+                <button class="btn btn-outline btn-sm">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /dashboard-main -->
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     PROFILE PAGE
+═══════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="profile">
+  <div class="container">
+    <div class="tag mb-16">My Account</div>
+
+    <div class="profile-header-card">
+      <div class="profile-avatar-lg">JS</div>
+      <div class="profile-info">
+        <h2>James Smith</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+          <span class="tag badge-green">Premium Member</span>
+          <span class="tag badge-green">✓ KYC Verified</span>
+          <span class="tag badge-blue">Property Investor</span>
+        </div>
+        <div class="profile-meta">
+          <span class="profile-meta-item">✉ james@smith.co.uk</span>
+          <span class="profile-meta-item">📍 Manchester, UK</span>
+          <span class="profile-meta-item">📅 Member since Jan 2025</span>
+          <span class="profile-meta-item">🏠 7 listings submitted</span>
+        </div>
+      </div>
+      <div style="margin-left:auto;">
+        <button class="btn btn-gold">Edit Profile</button>
+      </div>
+    </div>
+
+    <div class="grid-2" style="gap:22px;">
+      <div class="card">
+        <h3 class="mb-16">Profile Settings</h3>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" value="James Smith">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" value="james@smith.co.uk">
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" placeholder="+44 7700 900000">
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" value="Manchester, UK">
+        </div>
+        <div class="form-group">
+          <label>Investor Type</label>
+          <select>
+            <option>Property Investor</option>
+            <option>Sourcing Agent</option>
+            <option>Developer</option>
+            <option>First-Time Buyer</option>
+          </select>
+        </div>
+        <button class="btn btn-gold">Save Changes</button>
+      </div>
+
+      <div class="card">
+        <h3 class="mb-16">Password & Security</h3>
+        <div class="form-group">
+          <label>Current Password</label>
+          <input type="password" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" placeholder="Minimum 8 characters">
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <input type="password" placeholder="Repeat new password">
+        </div>
+        <button class="btn btn-gold btn-sm">Update Password</button>
+        <div class="divider"></div>
+        <h3 class="mb-16" style="font-size:.95rem;">Two-Factor Authentication</h3>
+        <p style="font-size:.85rem;color:var(--slate);margin-bottom:14px;">Protect your account with 2FA via authenticator app or SMS.</p>
+        <button class="btn btn-outline btn-sm">Enable 2FA</button>
+        <div class="divider"></div>
+        <h3 class="mb-16" style="font-size:.95rem;color:var(--red);">Danger Zone</h3>
+        <button class="btn btn-sm" style="background:rgba(232,64,64,.15);color:var(--red);border:1px solid rgba(232,64,64,.3);">Delete Account</button>
+      </div>
+
+      <!-- Email Notifications Preferences -->
+      <div class="card" style="grid-column:1/-1;">
+        <h3 class="mb-16">Notification Preferences</h3>
+        <div class="grid-3" style="gap:10px;">
+          <label class="checkbox-item"><input type="checkbox" checked> New deal alerts (instant)</label>
+          <label class="checkbox-item"><input type="checkbox" checked> Daily deal digest</label>
+          <label class="checkbox-item"><input type="checkbox" checked> Listing approved</label>
+          <label class="checkbox-item"><input type="checkbox"> Listing rejected</label>
+          <label class="checkbox-item"><input type="checkbox" checked> Membership renewal</label>
+          <label class="checkbox-item"><input type="checkbox" checked> Affiliate commissions</label>
+          <label class="checkbox-item"><input type="checkbox"> Weekly performance report</label>
+          <label class="checkbox-item"><input type="checkbox" checked> Security alerts</label>
+          <label class="checkbox-item"><input type="checkbox"> Platform news</label>
+        </div>
+        <button class="btn btn-gold btn-sm" style="margin-top:18px;">Save Preferences</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     AFFILIATE PROGRAMME
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="affiliate">
+  <div class="container">
+    <div class="tag mb-8">Earn with PropertyReply</div>
+    <h2 class="mb-32">Affiliate Programme</h2>
+
+    <div class="affiliate-hero">
+      <div class="grid-2">
+        <div>
+          <h3 style="font-size:1.3rem;margin-bottom:10px;">Earn up to <span class="gold">30% commission</span> per referral</h3>
+          <p style="color:var(--slate);font-size:.9rem;margin-bottom:18px;">Share your unique referral link. Every time someone signs up and upgrades, you earn. Track everything in real time.</p>
+          <div style="display:flex;gap:24px;flex-wrap:wrap;">
+            <div><h4 style="color:var(--gold);font-size:1.4rem;font-family:'Syne',sans-serif;">20%</h4><p style="font-size:.78rem;color:var(--slate);">Commission (Premium)</p></div>
+            <div><h4 style="color:var(--gold);font-size:1.4rem;font-family:'Syne',sans-serif;">30%</h4><p style="font-size:.78rem;color:var(--slate);">Commission (VIP) +5% VIP boost</p></div>
+            <div><h4 style="color:var(--gold);font-size:1.4rem;font-family:'Syne',sans-serif;">30 days</h4><p style="font-size:.78rem;color:var(--slate);">Cookie window</p></div>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:.82rem;color:var(--slate);margin-bottom:8px;">YOUR REFERRAL LINK</p>
+          <div class="ref-link-box">
+            <code>https://propertyreply.co.uk/ref/JS92840</code>
+            <button class="btn btn-gold btn-sm">Copy</button>
+          </div>
+          <p style="font-size:.78rem;color:var(--slate);margin-top:10px;">Share via email, social media, or your property network.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Commission Dashboard -->
+      <div class="card">
+        <h3 class="mb-16">💰 Commission Dashboard</h3>
+        <div class="grid-2" style="gap:12px;margin-bottom:20px;">
+          <div class="metric-box">
+            <div class="label">Total Earned</div>
+            <div class="value green">£340.00</div>
+          </div>
+          <div class="metric-box">
+            <div class="label">This Month</div>
+            <div class="value">£85.00</div>
+          </div>
+          <div class="metric-box">
+            <div class="label">Pending</div>
+            <div class="value amber">£29.00</div>
+          </div>
+          <div class="metric-box">
+            <div class="label">Paid Out</div>
+            <div class="value">£255.00</div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <h4 style="margin-bottom:14px;font-size:.9rem;">Referral History</h4>
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Plan</th>
+              <th>Commission</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>R.Wilson</td>
+              <td>Premium</td>
+              <td class="mono green">£5.80</td>
+              <td><span class="status-dot" style="background:var(--green);"></span>Paid</td>
+            </tr>
+            <tr>
+              <td>T.Ahmed</td>
+              <td>VIP</td>
+              <td class="mono green">£23.70</td>
+              <td><span class="status-dot" style="background:var(--green);"></span>Paid</td>
+            </tr>
+            <tr>
+              <td>S.Patel</td>
+              <td>Premium</td>
+              <td class="mono amber">£5.80</td>
+              <td><span class="status-dot" style="background:var(--amber);"></span>Pending</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="divider"></div>
+        <div class="flex-between">
+          <div>
+            <p style="font-size:.8rem;color:var(--slate);">Minimum payout: £50</p>
+          </div>
+          <button class="btn btn-gold btn-sm">Request Payout</button>
+        </div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="card">
+        <h3 class="mb-16">🏆 Top Referrers — June 2026</h3>
+        <div class="leaderboard-row">
+          <div class="lb-rank top3">🥇</div>
+          <div class="lb-avatar">👤</div>
+          <div class="lb-name">M. Thompson</div>
+          <div class="lb-bar-wrap"><div class="lb-bar" style="width:100%;"></div></div>
+          <div class="lb-earnings">£1,240</div>
+        </div>
+        <div class="leaderboard-row">
+          <div class="lb-rank top3">🥈</div>
+          <div class="lb-avatar">👤</div>
+          <div class="lb-name">P. Kumar</div>
+          <div class="lb-bar-wrap"><div class="lb-bar" style="width:82%;"></div></div>
+          <div class="lb-earnings">£1,018</div>
+        </div>
+        <div class="leaderboard-row">
+          <div class="lb-rank top3">🥉</div>
+          <div class="lb-avatar">👤</div>
+          <div class="lb-name">S. Davies</div>
+          <div class="lb-bar-wrap"><div class="lb-bar" style="width:70%;"></div></div>
+          <div class="lb-earnings">£868</div>
+        </div>
+        <div class="leaderboard-row">
+          <div class="lb-rank">#4</div>
+          <div class="lb-avatar">👤</div>
+          <div class="lb-name">A. Osei</div>
+          <div class="lb-bar-wrap"><div class="lb-bar" style="width:56%;background:#5a7090;"></div></div>
+          <div class="lb-earnings">£695</div>
+        </div>
+        <div class="leaderboard-row">
+          <div class="lb-rank">#5</div>
+          <div class="lb-avatar">👤</div>
+          <div class="lb-name">J. Smith (You)</div>
+          <div class="lb-bar-wrap"><div class="lb-bar" style="width:27%;background:var(--gold-lt);"></div></div>
+          <div class="lb-earnings gold">£340</div>
+        </div>
+        <div style="margin-top:20px;padding:14px;background:rgba(212,168,67,.07);border-radius:var(--radius);border:1px solid rgba(212,168,67,.2);font-size:.83rem;color:#c0a060;">
+          🎯 You're at #5. Refer 3 more Premium members this month to reach #4 and unlock a bonus.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     ADMIN PANEL
+═══════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="admin">
+  <div class="container">
+    <div class="flex-between mb-32">
+      <div>
+        <div class="tag mb-8">Admin Only</div>
+        <h2>Admin Panel</h2>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="chip">🔴 12 Pending Listings</span>
+        <span class="chip">🟡 3 Reports</span>
+        <span class="chip">🟢 1,840 Active Users</span>
+      </div>
+    </div>
+
+    <div class="admin-layout">
+      <div class="admin-sidebar">
+        <div class="admin-nav-item active">📊 Overview</div>
+        <div class="admin-nav-item">🏠 Listings</div>
+        <div class="admin-nav-item">👥 Users</div>
+        <div class="admin-nav-item">💳 Memberships</div>
+        <div class="admin-nav-item">🤝 Affiliates</div>
+        <div class="admin-nav-item">⚑ Reports</div>
+        <div class="admin-nav-item">⭐ Featured</div>
+        <div class="admin-nav-item">✅ KYC / Compliance</div>
+        <div class="admin-nav-item">📈 Analytics</div>
+        <div class="admin-nav-item">🔔 Notifications</div>
+        <div class="admin-nav-item">⚙️ Settings</div>
+      </div>
+
+      <div>
+        <!-- Analytics Overview -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3>📈 Site Analytics — June 2026</h3>
+            <select style="width:auto;padding:7px 12px;">
+              <option>Last 30 days</option>
+              <option>Last 7 days</option>
+              <option>All time</option>
+            </select>
+          </div>
+          <div class="admin-card-body">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+              <div class="metric-box">
+                <div class="label">Total Users</div>
+                <div class="value">18,402</div>
+                <div class="sub" style="color:var(--green);">↑ 342 this month</div>
+              </div>
+              <div class="metric-box">
+                <div class="label">Active Listings</div>
+                <div class="value">2,418</div>
+                <div class="sub" style="color:var(--green);">↑ 88 this month</div>
+              </div>
+              <div class="metric-box">
+                <div class="label">Premium Members</div>
+                <div class="value">1,204</div>
+                <div class="sub" style="color:var(--green);">↑ 67 this month</div>
+              </div>
+              <div class="metric-box">
+                <div class="label">Monthly Revenue</div>
+                <div class="value gold">£38,900</div>
+                <div class="sub" style="color:var(--green);">↑ 12% vs last month</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Listing Moderation -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3>🏠 Listing Approval Queue (12)</h3>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-outline btn-sm">Approve All</button>
+              <button class="btn btn-sm" style="background:rgba(232,64,64,.15);color:var(--red);border:1px solid rgba(232,64,64,.3);">Reject Selected</button>
+            </div>
+          </div>
+          <div class="admin-card-body">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th><input type="checkbox"></th>
+                  <th>Property</th>
+                  <th>Submitted By</th>
+                  <th>Price</th>
+                  <th>Discount</th>
+                  <th>Submitted</th>
+                  <th>KYC</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>Commercial Unit, Leeds</td>
+                  <td>J. Smith</td>
+                  <td class="mono">£89k</td>
+                  <td><span class="discount-pill">41%</span></td>
+                  <td>09 Jun</td>
+                  <td><span class="tag badge-green">✓ Verified</span></td>
+                  <td><div class="action-btns">
+                    <button class="btn btn-green btn-sm">✓ Approve</button>
+                    <button class="btn btn-outline btn-sm">👁 View</button>
+                    <button class="btn btn-red btn-sm">✕ Reject</button>
+                  </div></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>Land, Nottingham</td>
+                  <td>A. Patel</td>
+                  <td class="mono">£145k</td>
+                  <td><span class="discount-pill">35%</span></td>
+                  <td>08 Jun</td>
+                  <td><span class="tag badge-amber">⏳ Pending</span></td>
+                  <td><div class="action-btns">
+                    <button class="btn btn-green btn-sm">✓ Approve</button>
+                    <button class="btn btn-outline btn-sm">👁 View</button>
+                    <button class="btn btn-red btn-sm">✕ Reject</button>
+                  </div></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>2-Bed Flat, London</td>
+                  <td>Unknown123</td>
+                  <td class="mono">£50k</td>
+                  <td><span class="discount-pill">60%</span></td>
+                  <td>07 Jun</td>
+                  <td><span class="tag badge-red">✗ Unverified</span></td>
+                  <td><div class="action-btns">
+                    <button class="btn btn-outline btn-sm">👁 View</button>
+                    <button class="btn btn-red btn-sm">🚫 Spam</button>
+                  </div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- User Management -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3>👥 User Management</h3>
+            <div style="display:flex;gap:8px;">
+              <input type="text" placeholder="Search users…" style="width:200px;padding:8px 12px;">
+              <select style="width:auto;padding:7px 12px;">
+                <option>All Plans</option>
+                <option>Free</option>
+                <option>Premium</option>
+                <option>VIP</option>
+              </select>
+            </div>
+          </div>
+          <div class="admin-card-body">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Plan</th>
+                  <th>KYC</th>
+                  <th>Joined</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>James Smith</strong></td>
+                  <td>james@smith.co.uk</td>
+                  <td><span class="tag badge-green">Premium</span></td>
+                  <td><span class="tag badge-green">✓ Verified</span></td>
+                  <td>Jan 2025</td>
+                  <td><span class="status-dot" style="background:var(--green);"></span>Active</td>
+                  <td><div class="action-btns">
+                    <button class="btn btn-outline btn-sm">Edit</button>
+                    <button class="btn btn-red btn-sm">Suspend</button>
+                  </div></td>
+                </tr>
+                <tr>
+                  <td><strong>A. Patel</strong></td>
+                  <td>a.patel@email.co.uk</td>
+                  <td><span class="tag">Free</span></td>
+                  <td><span class="tag badge-amber">⏳ Pending</span></td>
+                  <td>May 2026</td>
+                  <td><span class="status-dot" style="background:var(--green);"></span>Active</td>
+                  <td><div class="action-btns">
+                    <button class="btn btn-outline btn-sm">Edit</button>
+                    <button class="btn btn-red btn-sm">Suspend</button>
+                  </div></td>
+                </tr>
+                <tr>
+                  <td><strong>Unknown123</strong></td>
+                  <td>spam@temp.io</td>
+                  <td><span class="tag">Free</span></td>
+                  <td><span class="tag badge-red">✗ Failed</span></td>
+                  <td>Jun 2026</td>
+                  <td><span class="status-dot" style="background:var(--red);"></span>Flagged</td>
+                  <td><div class="action-btns">
+                    <button class="btn btn-outline btn-sm">Review</button>
+                    <button class="btn btn-red btn-sm">Ban</button>
+                  </div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Affiliate Payout Management -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3>🤝 Affiliate Payout Management</h3>
+            <button class="btn btn-gold btn-sm">Process All Payouts</button>
+          </div>
+          <div class="admin-card-body">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Affiliate</th>
+                  <th>Referrals</th>
+                  <th>Total Earned</th>
+                  <th>Pending</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>M. Thompson</td>
+                  <td>62</td>
+                  <td class="mono green">£1,240</td>
+                  <td class="mono amber">£320</td>
+                  <td><span class="tag badge-amber">Pending Payout</span></td>
+                  <td><button class="btn btn-gold btn-sm">Pay Out</button></td>
+                </tr>
+                <tr>
+                  <td>J. Smith</td>
+                  <td>12</td>
+                  <td class="mono green">£340</td>
+                  <td class="mono amber">£85</td>
+                  <td><span class="tag badge-amber">Pending Payout</span></td>
+                  <td><button class="btn btn-gold btn-sm">Pay Out</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Reports / Spam -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3>⚑ Reported Listings (3)</h3>
+          </div>
+          <div class="admin-card-body">
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="padding:14px;background:rgba(232,64,64,.07);border:1px solid rgba(232,64,64,.2);border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div>
+                  <p style="font-weight:600;font-size:.88rem;">2-Bed Flat, London — "Too good to be true"</p>
+                  <p style="font-size:.78rem;color:var(--slate);">Reported by: 3 users · Reason: Suspected fraudulent listing · Submitted by: Unknown123</p>
+                </div>
+                <div class="action-btns">
+                  <button class="btn btn-outline btn-sm">👁 Review</button>
+                  <button class="btn btn-red btn-sm">🗑 Remove</button>
+                </div>
+              </div>
+              <div style="padding:14px;background:rgba(240,160,32,.07);border:1px solid rgba(240,160,32,.2);border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div>
+                  <p style="font-weight:600;font-size:.88rem;">Studio Flat, London — "Duplicate listing"</p>
+                  <p style="font-size:.78rem;color:var(--slate);">Reported by: 1 user · Reason: Duplicate · Submitted by: K. Brown</p>
+                </div>
+                <div class="action-btns">
+                  <button class="btn btn-outline btn-sm">👁 Review</button>
+                  <button class="btn btn-red btn-sm">🗑 Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /admin main -->
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     KYC / IDENTITY VERIFICATION & COMPLIANCE
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="kyc">
+  <div class="container">
+    <div class="tag mb-8">Credas Integration</div>
+    <h2 class="mb-8">Identity Verification & Compliance</h2>
+    <p class="muted mb-32">Powered by Credas. Secure KYC, AML screening, and compliance checks are required to submit listings and access full contact details.</p>
+
+    <div class="kyc-flow">
+
+      <!-- Step Indicator -->
+      <div class="kyc-steps">
+        <div class="kyc-step done">
+          <div class="kyc-step-num">✓</div>
+          <p>Create Account</p>
+        </div>
+        <div class="kyc-step done">
+          <div class="kyc-step-num">✓</div>
+          <p>Email Verified</p>
+        </div>
+        <div class="kyc-step active">
+          <div class="kyc-step-num">3</div>
+          <p>ID Verification</p>
+        </div>
+        <div class="kyc-step">
+          <div class="kyc-step-num">4</div>
+          <p>AML Check</p>
+        </div>
+        <div class="kyc-step">
+          <div class="kyc-step-num">5</div>
+          <p>Verified ✓</p>
+        </div>
+      </div>
+
+      <div class="kyc-card">
+
+        <!-- Completed verification badge example -->
+        <div class="verification-badge">
+          <div class="v-icon">✅</div>
+          <div>
+            <h4>Identity Verified via Credas</h4>
+            <p>Your identity has been verified. AML screening passed. Verification ID: CRED-2026-08432</p>
+          </div>
+        </div>
+
+        <h3 class="mb-16">Compliance Status</h3>
+        <div class="compliance-row">
+          <span class="c-label">Identity Document (Passport / Driving Licence)</span>
+          <span class="c-status"><span style="color:var(--green);">✓</span> Verified</span>
+        </div>
+        <div class="compliance-row">
+          <span class="c-label">Selfie / Liveness Check</span>
+          <span class="c-status"><span style="color:var(--green);">✓</span> Passed</span>
+        </div>
+        <div class="compliance-row">
+          <span class="c-label">KYC — Know Your Customer</span>
+          <span class="c-status"><span style="color:var(--green);">✓</span> Completed</span>
+        </div>
+        <div class="compliance-row">
+          <span class="c-label">AML — Anti-Money Laundering Screening</span>
+          <span class="c-status"><span style="color:var(--green);">✓</span> Clear</span>
+        </div>
+        <div class="compliance-row">
+          <span class="c-label">PEP & Sanctions Check</span>
+          <span class="c-status"><span style="color:var(--green);">✓</span> Clear</span>
+        </div>
+        <div class="compliance-row">
+          <span class="c-label">Verification Date</span>
+          <span class="c-status mono">14 Feb 2026</span>
+        </div>
+        <div class="compliance-row">
+          <span class="c-label">Next Review Due</span>
+          <span class="c-status mono">14 Feb 2027</span>
+        </div>
+        <div class="compliance-row">
+          <span class="c-label">Credas Reference</span>
+          <span class="c-status mono">CRED-2026-08432</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="alert alert-info">
+          <span>ℹ️</span>
+          <div>Your verification data is stored securely in compliance with GDPR. It is used solely for the purpose of identity and AML screening. View our <a href="#trust" class="inline-link">Privacy Policy</a> for full details.</div>
+        </div>
+
+        <!-- Unverified state – shown to new users -->
+        <div style="margin-top:24px;padding:24px;background:rgba(212,168,67,.07);border:1px dashed rgba(212,168,67,.3);border-radius:var(--radius);">
+          <h4 style="margin-bottom:8px;font-size:.95rem;">🔐 Not yet verified?</h4>
+          <p style="font-size:.85rem;color:var(--slate);margin-bottom:16px;">Verification is required to submit listings and view contact details. The process takes under 5 minutes via Credas secure identity checks.</p>
+          <button class="btn btn-gold">Start Verification with Credas →</button>
+        </div>
+
+      </div>
+
+      <!-- Admin Compliance View (Mini) -->
+      <div class="card" style="margin-top:28px;">
+        <h3 class="mb-16">🛡 Admin: Compliance Audit Trail</h3>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Check Type</th>
+              <th>Result</th>
+              <th>Date</th>
+              <th>Credas Ref</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>James Smith</td>
+              <td>Full KYC + AML</td>
+              <td><span class="tag badge-green">Passed</span></td>
+              <td class="mono">14 Feb 2026</td>
+              <td class="mono">CRED-2026-08432</td>
+            </tr>
+            <tr>
+              <td>A. Patel</td>
+              <td>KYC</td>
+              <td><span class="tag badge-amber">In Progress</span></td>
+              <td class="mono">09 Jun 2026</td>
+              <td class="mono">CRED-2026-19287</td>
+            </tr>
+            <tr>
+              <td>Unknown123</td>
+              <td>KYC</td>
+              <td><span class="tag badge-red">Failed</span></td>
+              <td class="mono">07 Jun 2026</td>
+              <td class="mono">CRED-2026-19104</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="margin-top:12px;font-size:.78rem;color:var(--slate);">Audit records retained for 5 years in accordance with AML regulations. All checks performed via Credas API.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     NOTIFICATIONS
+═══════════════════════════════════════════════════════ -->
+<section class="section section-dark" id="notifications">
+  <div class="container">
+    <div class="flex-between mb-32">
+      <div>
+        <div class="tag mb-8">Notifications</div>
+        <h2>Your Alerts</h2>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm">Mark All Read</button>
+        <button class="btn btn-outline btn-sm">Settings</button>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:760px;">
+      <!-- Unread -->
+      <div class="notif-item notif-unread">
+        <div class="notif-icon" style="background:rgba(34,200,122,.15);">🏠</div>
+        <div class="notif-body">
+          <h5>New BMV Deal Matching Your Search</h5>
+          <p>A new 3-bed house in Manchester has been listed at 31% below market value. Asking price: £122,000.</p>
+          <div class="time">2 minutes ago · via Email &amp; Platform</div>
+        </div>
+      </div>
+      <div class="notif-item notif-unread">
+        <div class="notif-icon" style="background:rgba(212,168,67,.15);">✅</div>
+        <div class="notif-body">
+          <h5>Your Listing Has Been Approved</h5>
+          <p>Your submission "Commercial Unit – Leeds" has been reviewed and is now live on the marketplace.</p>
+          <div class="time">1 hour ago · Platform</div>
+        </div>
+      </div>
+      <!-- Read -->
+      <div class="notif-item">
+        <div class="notif-icon" style="background:rgba(74,96,128,.15);">💳</div>
+        <div class="notif-body">
+          <h5>Membership Renewal Reminder</h5>
+          <p>Your Premium membership renews in 7 days on 18 June 2026 for £29.00. Update billing details if needed.</p>
+          <div class="time">Yesterday · Email</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon" style="background:rgba(34,200,122,.15);">💰</div>
+        <div class="notif-body">
+          <h5>Affiliate Commission Earned</h5>
+          <p>T. Ahmed upgraded to VIP. You've earned £23.70 commission. Total this month: £85.00.</p>
+          <div class="time">2 days ago · Email</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon" style="background:rgba(232,64,64,.15);">❌</div>
+        <div class="notif-body">
+          <h5>Listing Rejected — 2-Bed Flat, Sheffield</h5>
+          <p>Your listing was rejected as the discount percentage could not be verified. Please resubmit with updated evidence.</p>
+          <div class="time">5 days ago · Email &amp; Platform</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon" style="background:rgba(74,96,128,.15);">🔐</div>
+        <div class="notif-body">
+          <h5>New Login Detected</h5>
+          <p>New sign-in from Manchester, UK at 09:14 on 6 June 2026. If this wasn't you, please secure your account.</p>
+          <div class="time">5 days ago · Email</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     AUTH: SIGN IN / REGISTER
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="auth">
+  <div class="container">
+    <div class="tag mb-8">Account Access</div>
+    <h2 class="mb-32">Sign In or Create an Account</h2>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;max-width:900px;">
+
+      <!-- Sign In -->
+      <div class="card">
+        <h3 class="mb-8">Sign In</h3>
+        <p class="muted mb-24" style="font-size:.85rem;">Access your deals, dashboard, and listings.</p>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" placeholder="your@email.co.uk">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" placeholder="••••••••">
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <label class="checkbox-item" style="border:none;padding:0;"><input type="checkbox"> Remember me</label>
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </div>
+        <button class="btn btn-gold" style="width:100%;">Sign In →</button>
+        <div class="divider-text">or continue with</div>
+        <button class="social-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Continue with Google
+        </button>
+      </div>
+
+      <!-- Register -->
+      <div class="card">
+        <h3 class="mb-8">Create Free Account</h3>
+        <p class="muted mb-24" style="font-size:.85rem;">Join 18,000+ investors finding BMV deals every day.</p>
+        <div class="grid-2" style="gap:12px;">
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" placeholder="James">
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" placeholder="Smith">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" placeholder="your@email.co.uk">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" placeholder="Minimum 8 characters">
+        </div>
+        <div class="form-group">
+          <label>Referral Code (optional)</label>
+          <input type="text" placeholder="e.g. JS92840">
+        </div>
+        <div class="form-group">
+          <label class="checkbox-item" style="border:none;padding:0;font-size:.8rem;color:var(--slate);">
+            <input type="checkbox"> I agree to the <a href="#trust" class="inline-link">Terms & Conditions</a> and <a href="#trust" class="inline-link">Privacy Policy</a>
+          </label>
+        </div>
+        <button class="btn btn-gold" style="width:100%;">Create Free Account →</button>
+        <div class="alert alert-info" style="margin-top:14px;">
+          <span>ℹ️</span>
+          <span style="font-size:.8rem;">A verification email will be sent to your address. Please verify within 24 hours.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Password Reset (shown separately) -->
+    <div style="margin-top:40px;max-width:440px;">
+      <div class="card">
+        <h3 class="mb-8">Reset Password</h3>
+        <p class="muted mb-20" style="font-size:.85rem;">Enter your email address and we'll send you a reset link.</p>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" placeholder="your@email.co.uk">
+        </div>
+        <button class="btn btn-gold btn-sm">Send Reset Link</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     TRUST & COMPLIANCE PAGES
+═══════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="trust">
+  <div class="container">
+    <div class="tag mb-8">Legal & Trust</div>
+    <h2 class="mb-32">Trust, Compliance & Legal</h2>
+
+    <div class="trust-cards">
+      <div class="trust-card">
+        <h3>📄 Terms & Conditions</h3>
+        <p>By using PropertyReply, you agree to our terms of service. These set out the rules governing use of the platform, listing submissions, membership obligations, and liability limitations.</p>
+        <p>All property listings on this platform are submitted by third parties. PropertyReply does not guarantee the accuracy, completeness, or legality of any listing. Users must conduct their own due diligence before engaging in any property transaction.</p>
+        <p>Membership fees are non-refundable once a billing period has commenced. Accounts found to be in breach of terms may be suspended or permanently banned.</p>
+        <a href="#" class="inline-link" style="display:block;margin-top:14px;font-size:.85rem;">Read full Terms & Conditions →</a>
+      </div>
+      <div class="trust-card">
+        <h3>🔒 Privacy Policy</h3>
+        <p>We take your privacy seriously. PropertyReply processes your personal data in accordance with the UK GDPR and the Data Protection Act 2018. Data is used to provide and improve the platform, communicate with you, and fulfil our legal obligations.</p>
+        <p>We use Credas as our identity verification partner. Your identity data is transmitted securely and stored in accordance with their data processing agreement. We never sell personal data to third parties.</p>
+        <p>You have the right to access, correct, or delete your data at any time. Contact us at privacy@propertyreply.co.uk.</p>
+        <a href="#" class="inline-link" style="display:block;margin-top:14px;font-size:.85rem;">Read full Privacy Policy →</a>
+      </div>
+      <div class="trust-card">
+        <h3>⚠️ Investment Disclaimer</h3>
+        <p>PropertyReply is a listing marketplace and information service. Nothing published on this platform constitutes financial, investment, legal, or tax advice.</p>
+        <p>Property investment involves risk. Values can fall as well as rise. Past performance is not a reliable indicator of future returns. You should seek independent financial and legal advice before committing to any property purchase or investment strategy.</p>
+        <p>All deal analysis figures are estimates only and are provided for illustrative purposes.</p>
+        <a href="#" class="inline-link" style="display:block;margin-top:14px;font-size:.85rem;">Read full Disclaimer →</a>
+      </div>
+      <div class="trust-card">
+        <h3>🛡 Anti-Spam & Reporting</h3>
+        <p>PropertyReply has a zero-tolerance policy for spam, fraudulent, or misleading listings. All submissions are reviewed by our moderation team before going live.</p>
+        <p>If you believe a listing is inaccurate, misleading, or suspicious, please use the Report button on any listing. Reports are reviewed within 24 hours. Persistent abusers will be permanently banned and may be reported to relevant authorities.</p>
+        <p>Anti-spam measures include rate limiting, CAPTCHA verification, and automated spam detection.</p>
+        <a href="#" class="inline-link" style="display:block;margin-top:14px;font-size:.85rem;">Report a listing →</a>
+      </div>
+    </div>
+
+    <!-- Contact / Reporting Form -->
+    <div class="card" style="max-width:600px;margin-top:32px;">
+      <h3 class="mb-16">⚑ Report a Suspicious Listing</h3>
+      <div class="form-group">
+        <label>Listing Reference / URL</label>
+        <input type="text" placeholder="e.g. propertyreply.co.uk/listing/12345">
+      </div>
+      <div class="form-group">
+        <label>Reason for Report</label>
+        <select>
+          <option>-- Select Reason --</option>
+          <option>Fraudulent / Fake listing</option>
+          <option>Incorrect pricing information</option>
+          <option>Spam or duplicate listing</option>
+          <option>Property does not exist</option>
+          <option>Suspected scam</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Additional Details</label>
+        <textarea rows="3" placeholder="Please provide as much detail as possible…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Your Email (optional)</label>
+        <input type="email" placeholder="So we can follow up if needed">
+      </div>
+      <button class="btn btn-gold">Submit Report</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo" style="font-size:1.6rem;">Property<span>Reply</span></div>
+        <p>The UK's leading marketplace for below-market-value property deals. Connecting motivated sellers with active investors.</p>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <span class="chip">🏴󠁧󠁢󠁥󠁮󠁧󠁿 UK Based</span>
+          <span class="chip">🔒 GDPR Compliant</span>
+          <span class="chip">✅ Credas Verified</span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Platform</h5>
+        <a href="#listings">Browse Deals</a>
+        <a href="#submit">Submit a Deal</a>
+        <a href="#membership">Membership Plans</a>
+        <a href="#affiliate">Affiliate Programme</a>
+        <a href="#deal-analysis">Deal Analysis</a>
+      </div>
+      <div class="footer-col">
+        <h5>Account</h5>
+        <a href="#auth">Sign In</a>
+        <a href="#auth">Register Free</a>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#profile">Profile</a>
+        <a href="#kyc">KYC Verification</a>
+        <a href="#notifications">Notifications</a>
+      </div>
+      <div class="footer-col">
+        <h5>Legal</h5>
+        <a href="#trust">Terms & Conditions</a>
+        <a href="#trust">Privacy Policy</a>
+        <a href="#trust">Investment Disclaimer</a>
+        <a href="#trust">Anti-Spam Policy</a>
+        <a href="#trust">Report a Listing</a>
+        <a href="#">Cookie Policy</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 PropertyReply Ltd. Registered in England & Wales. All rights reserved.</p>
+      <div class="footer-legal">
+        <a href="#trust">Terms</a>
+        <a href="#trust">Privacy</a>
+        <a href="#trust">Disclaimer</a>
+        <a href="#">Cookies</a>
+        <a href="#">Sitemap</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
