@@ -4,34 +4,50 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import GoogleIcon from "@/components/icons/GoogleIcon";
+import { ApiRequestError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
 const features: { num: string; text: string }[] = [
   { num: "01", text: "2,400+ verified below-market deals across the UK" },
   { num: "02", text: "Full flip & buy-to-let analysis on every listing" },
-  { num: "03", text: "Earn up to 30% commission with the affiliate programme" },
-  { num: "04", text: "Credas-verified sellers and GDPR-compliant data" },
+  { num: "03", text: "Identity-verified sellers and GDPR-compliant data" },
 ];
 
 export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { login, register, loading } = useAuth();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [error, setError] = useState("");
 
   const isRegister = mode === "register";
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const name = `${firstName} ${lastName}`.trim();
-    signIn({ email, name: isRegister ? name : undefined });
-    router.push("/app/dashboard");
-  };
+    setError("");
 
-  const handleGoogle = () => {
-    signIn();
-    router.push("/app/dashboard");
+    try {
+      if (isRegister) {
+        await register({
+          firstName,
+          lastName,
+          email,
+          password,
+        });
+        router.push("/app/membership");
+        return;
+      }
+      await login(email, password);
+      router.push("/app/dashboard");
+    } catch (err) {
+      const message =
+        err instanceof ApiRequestError
+          ? err.message
+          : "Unable to connect to the server. Is the API running?";
+      setError(message);
+    }
   };
 
   return (
@@ -45,14 +61,7 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
             The UK&apos;s #1 marketplace for{" "}
             <span className="text-gradient">below-market</span> property deals.
           </h2>
-          <ul className="auth-feature-list">
-            {features.map((feature) => (
-              <li key={feature.num}>
-                <span className="dot">{feature.num}</span>
-                {feature.text}
-              </li>
-            ))}
-          </ul>
+          
         </div>
 
         <div className="auth-form-panel">
@@ -67,6 +76,13 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
                 : "Sign in to access your deals, dashboard, and listings."}
             </p>
 
+            {error && (
+              <div className="alert alert-error" style={{ marginBottom: "16px" }}>
+                <span>!</span>
+                <span>{error}</span>
+              </div>
+            )}
+
             {isRegister && (
               <div className="grid-2" style={{ gap: "12px" }}>
                 <div className="form-group">
@@ -76,6 +92,7 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
                     placeholder="James"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
+                    required
                   />
                 </div>
                 <div className="form-group">
@@ -85,6 +102,7 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
                     placeholder="Smith"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
+                    required
                   />
                 </div>
               </div>
@@ -97,6 +115,7 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
                 placeholder="your@email.co.uk"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
             <div className="form-group">
@@ -106,15 +125,14 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
                 placeholder={
                   isRegister ? "Minimum 8 characters" : "••••••••"
                 }
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={isRegister ? 8 : undefined}
+                required
               />
             </div>
 
-            {isRegister ? (
-              <div className="form-group">
-                <label>Referral Code (optional)</label>
-                <input type="text" placeholder="e.g. JS92840" />
-              </div>
-            ) : (
+            {!isRegister && (
               <div
                 style={{
                   display: "flex",
@@ -129,9 +147,9 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
                 >
                   <input type="checkbox" /> Remember me
                 </label>
-                <a href="#" className="forgot-link">
+                <Link href="/forgot-password" className="forgot-link">
                   Forgot password?
-                </a>
+                </Link>
               </div>
             )}
 
@@ -139,15 +157,21 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
               type="submit"
               className="btn btn-gold"
               style={{ width: "100%" }}
+              disabled={loading}
             >
-              {isRegister ? "Create Free Account →" : "Sign In →"}
+              {loading
+                ? "Please wait…"
+                : isRegister
+                  ? "Create Account →"
+                  : "Sign In →"}
             </button>
 
             <div className="divider-text">or continue with</div>
             <button
               type="button"
               className="social-btn"
-              onClick={handleGoogle}
+              disabled
+              title="Google sign-in coming soon"
             >
               <GoogleIcon />
               Continue with Google
@@ -161,10 +185,16 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
               ) : (
                 <>
                   New to PropertyReply?{" "}
-                  <Link href="/register">Create a free account</Link>
+                  <Link href="/register">Create an account</Link>
                 </>
               )}
             </p>
+            {!isRegister && (
+              <p className="auth-switch">
+                Didn&apos;t get a verification email?{" "}
+                <Link href="/resend-verification">Resend it</Link>
+              </p>
+            )}
           </form>
         </div>
       </div>

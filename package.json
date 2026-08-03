@@ -5,14 +5,19 @@
   "description": "PropertyReply — UK BMV property marketplace, built with Next.js (App Router).",
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && next dev",
     "build": "next build",
     "start": "next start",
+    "clean": "node -e \"['.next','.next-build'].forEach(d=>require('fs').rmSync(d,{recursive:true,force:true}))\"",
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.0.9",
     "next": "^14.2.35",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "resend": "^6.14.0"
   },
   "devDependencies": {
     "@types/node": "20.14.10",

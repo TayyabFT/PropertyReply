@@ -16,7 +16,7 @@ const trustCards: {
     title: "Privacy Policy",
     paragraphs: [
       "We take your privacy seriously. PropertyReply processes your personal data in accordance with the UK GDPR and the Data Protection Act 2018. Data is used to provide and improve the platform, communicate with you, and fulfil our legal obligations.",
-      "We use Credas as our identity verification partner. Your identity data is transmitted securely and stored in accordance with their data processing agreement. We never sell personal data to third parties.",
+      "We use Stripe Identity as our identity verification partner. Your identity data is transmitted securely and stored in accordance with their data processing agreement. We never sell personal data to third parties.",
       "You have the right to access, correct, or delete your data at any time. Contact us at privacy@propertyreply.co.uk.",
     ],
     linkLabel: "Read full Privacy Policy →",

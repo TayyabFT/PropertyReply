@@ -8,76 +8,152 @@ import {
   useMemo,
   useState,
 } from "react";
+import { authApi, type ApiUser } from "@/lib/api";
 
-export type User = {
-  name: string;
-  email: string;
-  initials: string;
-  plan: string;
-};
+export type User = ApiUser;
 
 type AuthContextValue = {
   user: User | null;
+  token: string | null;
   ready: boolean;
-  signIn: (details?: { email?: string; name?: string }) => User;
-  signOut: () => void;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (input: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+  }) => Promise<void>;
+  signOut: () => Promise<void>;
+  updateUser: (user: User) => void;
 };
 
-const STORAGE_KEY = "pr_user";
+const TOKEN_KEY = "pr_token";
+const KYC_COOKIE = "pr_kyc";
+
+function persistKycCookie(status: string | null) {
+  if (typeof document === "undefined") return;
+  if (status) {
+    document.cookie = `${KYC_COOKIE}=${encodeURIComponent(status)}; path=/; max-age=604800; SameSite=Lax`;
+  } else {
+    document.cookie = `${KYC_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
+  }
+}
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function initialsFor(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "PR";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+function persistToken(token: string | null) {
+  try {
+    if (token) {
+      window.localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      window.localStorage.removeItem(TOKEN_KEY);
+    }
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function readToken(): string | null {
+  try {
+    return window.localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setUser(JSON.parse(raw) as User);
-    } catch {
-      // ignore malformed storage
+    async function restoreSession() {
+      const savedToken = readToken();
+      if (!savedToken) {
+        setReady(true);
+        return;
+      }
+
+      try {
+        const response = await authApi.me(savedToken);
+        setUser(response.data.user);
+        setToken(savedToken);
+        persistKycCookie(response.data.user.kycStatus || "pending");
+      } catch {
+        persistToken(null);
+        setUser(null);
+        setToken(null);
+      } finally {
+        setReady(true);
+      }
     }
-    setReady(true);
+
+    restoreSession();
   }, []);
 
-  const signIn = useCallback<AuthContextValue["signIn"]>((details) => {
-    const name = details?.name?.trim() || "James Smith";
-    const email = details?.email?.trim() || "james@smith.co.uk";
-    const nextUser: User = {
-      name,
-      email,
-      initials: initialsFor(name),
-      plan: "Premium",
-    };
+  const applyAuth = useCallback((nextUser: User, nextToken: string) => {
     setUser(nextUser);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
-    } catch {
-      // ignore storage failures
-    }
-    return nextUser;
+    setToken(nextToken);
+    persistToken(nextToken);
+    persistKycCookie(nextUser.kycStatus || "pending");
   }, []);
 
-  const signOut = useCallback(() => {
-    setUser(null);
-    try {
-      window.localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // ignore storage failures
+  const login = useCallback(
+    async (email: string, password: string) => {
+      setLoading(true);
+      try {
+        const response = await authApi.login({ email, password });
+        applyAuth(response.data.user, response.data.token);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [applyAuth],
+  );
+
+  const register = useCallback(
+    async (input: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      password: string;
+    }) => {
+      setLoading(true);
+      try {
+        const response = await authApi.register(input);
+        applyAuth(response.data.user, response.data.token);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [applyAuth],
+  );
+
+  const signOut = useCallback(async () => {
+    const currentToken = token || readToken();
+    if (currentToken) {
+      try {
+        await authApi.logout(currentToken);
+      } catch {
+        // still clear local session if API fails
+      }
     }
+    setUser(null);
+    setToken(null);
+    persistToken(null);
+    persistKycCookie(null);
+  }, [token]);
+
+  const updateUser = useCallback((nextUser: User) => {
+    setUser(nextUser);
+    persistKycCookie(nextUser.kycStatus || "pending");
   }, []);
 
   const value = useMemo(
-    () => ({ user, ready, signIn, signOut }),
-    [user, ready, signIn, signOut],
+    () => ({ user, token, ready, loading, login, register, signOut, updateUser }),
+    [user, token, ready, loading, login, register, signOut, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

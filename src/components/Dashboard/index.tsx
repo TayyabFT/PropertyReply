@@ -1,32 +1,14 @@
+"use client";
+
 import Link from "next/link";
-
-const stats: { label: string; value: string; valueClass?: string; change: string }[] = [
-  { label: "Saved Deals", value: "24", valueClass: "gold", change: "↑ 3 this week" },
-  { label: "Submissions", value: "7", change: "5 live, 2 pending" },
-  { label: "Affiliate Earnings", value: "£340", valueClass: "green", change: "↑ £85 this month" },
-  { label: "Referrals", value: "12", change: "↑ 2 this week" },
-];
-
-const submissions: {
-  property: string;
-  location: string;
-  price: string;
-  discount: string;
-  statusColor: string;
-  status: string;
-  submitted: string;
-}[] = [
-  { property: "3-Bed Terrace", location: "Manchester", price: "£118k", discount: "34%", statusColor: "var(--green)", status: "Live", submitted: "02 Jun 26" },
-  { property: "5-Bed HMO", location: "Birmingham", price: "£195k", discount: "28%", statusColor: "var(--green)", status: "Live", submitted: "28 May 26" },
-  { property: "Commercial Unit", location: "Leeds", price: "£89k", discount: "41%", statusColor: "var(--amber)", status: "Pending Review", submitted: "09 Jun 26" },
-  { property: "2-Bed Flat", location: "Sheffield", price: "£72k", discount: "22%", statusColor: "var(--red)", status: "Rejected", submitted: "01 Jun 26" },
-];
-
-const savedProperties: { title: string; meta: string }[] = [
-  { title: "3-Bed Terrace — Manchester", meta: "£118k asking · 34% below market · Added 2h ago" },
-  { title: "4-Bed Detached — Liverpool", meta: "£162k asking · 26% below market · Saved yesterday" },
-  { title: "5-Bed HMO — Birmingham", meta: "£195k asking · 28% below market · Saved 3d ago" },
-];
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth";
+import {
+  overviewApi,
+  type OverviewData,
+  ApiRequestError,
+} from "@/lib/api";
 
 const savedRowStyle = {
   display: "flex",
@@ -39,11 +21,114 @@ const savedRowStyle = {
 } as const;
 
 export default function Dashboard() {
+  const { user, token } = useAuth();
+  const router = useRouter();
+  const firstName = user?.firstName || user?.name?.split(" ")[0] || "there";
+
+  const [overview, setOverview] = useState<OverviewData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  async function handleRemoveSaved(id: string) {
+    if (!token) return;
+    setRemovingId(id);
+    try {
+      await overviewApi.removeSaved(token, id);
+      setOverview((current) =>
+        current
+          ? {
+              ...current,
+              savedProperties: current.savedProperties.filter(
+                (item) => item.id !== id,
+              ),
+              savedCount: Math.max(0, current.savedCount - 1),
+            }
+          : current,
+      );
+    } catch (err) {
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Unable to remove saved property.",
+      );
+    } finally {
+      setRemovingId(null);
+    }
+  }
+
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+
+    async function loadOverview() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await overviewApi.get(token!);
+        if (!cancelled) {
+          setOverview(response.data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const message =
+            err instanceof ApiRequestError
+              ? err.message
+              : "Failed to load dashboard data.";
+          setError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadOverview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  if (loading) {
+    return (
+      <section className="section section-dark" id="dashboard">
+        <div className="container">
+          <div className="page-head">
+            <h1>Welcome back, {firstName} 👋</h1>
+            <p>Loading your dashboard…</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error || !overview) {
+    return (
+      <section className="section section-dark" id="dashboard">
+        <div className="container">
+          <div className="page-head">
+            <h1>Welcome back, {firstName} 👋</h1>
+            <p style={{ color: "var(--red)" }}>
+              {error || "Unable to load dashboard data."}
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const { stats, membership, submissions, savedProperties, savedCount } =
+    overview;
+
   return (
     <section className="section section-dark" id="dashboard">
       <div className="container">
         <div className="page-head">
-          <h1>Welcome back, James 👋</h1>
+          <h1>Welcome back, {firstName} 👋</h1>
           <p>Here&apos;s what&apos;s happening across your account today.</p>
         </div>
 
@@ -59,7 +144,17 @@ export default function Dashboard() {
                 >
                   {stat.value}
                 </div>
-                <div className="ds-change up">{stat.change}</div>
+                <div
+                  className={
+                    stat.trend === "up"
+                      ? "ds-change up"
+                      : stat.trend === "down"
+                        ? "ds-change down"
+                        : "ds-change"
+                  }
+                >
+                  {stat.change}
+                </div>
               </div>
             ))}
           </div>
@@ -67,31 +162,35 @@ export default function Dashboard() {
           <div className="card">
             <div className="flex-between mb-16">
               <h3>💳 Membership Status</h3>
-              <span className="tag badge-green">Premium · Active</span>
+              <span className={membership.badgeClass}>
+                {membership.badgeLabel}
+              </span>
             </div>
             <div className="grid-3" style={{ gap: "14px" }}>
               <div>
                 <p style={{ fontSize: ".75rem", color: "var(--slate)" }}>Plan</p>
-                <p style={{ fontWeight: 600 }}>Premium Monthly</p>
+                <p style={{ fontWeight: 600 }}>{membership.billingLabel}</p>
               </div>
               <div>
                 <p style={{ fontSize: ".75rem", color: "var(--slate)" }}>
                   Renews
                 </p>
-                <p style={{ fontWeight: 600 }}>12 July 2026</p>
+                <p style={{ fontWeight: 600 }}>{membership.renewsAt}</p>
               </div>
               <div>
                 <p style={{ fontSize: ".75rem", color: "var(--slate)" }}>
                   Price
                 </p>
-                <p style={{ fontWeight: 600 }}>£29.00 / month</p>
+                <p style={{ fontWeight: 600 }}>{membership.price}</p>
               </div>
             </div>
             <div className="divider"></div>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              <Link href="/app/membership" className="btn btn-gold btn-sm">
-                Upgrade to VIP
-              </Link>
+              {membership.plan !== "VIP" && (
+                <Link href="/app/membership" className="btn btn-gold btn-sm">
+                  Upgrade to VIP
+                </Link>
+              )}
               <button className="btn btn-outline btn-sm">Manage Billing</button>
               <button
                 className="btn btn-outline btn-sm"
@@ -125,7 +224,7 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {submissions.map((row) => (
-                  <tr key={row.property + row.submitted}>
+                  <tr key={row.id}>
                     <td>{row.property}</td>
                     <td>{row.location}</td>
                     <td className="mono">{row.price}</td>
@@ -150,14 +249,14 @@ export default function Dashboard() {
             <div className="flex-between mb-16">
               <h3>❤️ Saved & Favourite Properties</h3>
               <span style={{ fontSize: ".8rem", color: "var(--slate)" }}>
-                24 saved
+                {savedCount} saved
               </span>
             </div>
             <div
               style={{ display: "flex", flexDirection: "column", gap: "10px" }}
             >
               {savedProperties.map((item) => (
-                <div style={savedRowStyle} key={item.title}>
+                <div style={savedRowStyle} key={item.id}>
                   <div>
                     <p style={{ fontWeight: 600, fontSize: ".9rem" }}>
                       {item.title}
@@ -167,8 +266,22 @@ export default function Dashboard() {
                     </p>
                   </div>
                   <div style={{ display: "flex", gap: "8px" }}>
-                    <button className="btn btn-gold btn-sm">View</button>
-                    <button className="btn btn-outline btn-sm">✕</button>
+                    <button
+                      className="btn btn-gold btn-sm"
+                      onClick={() =>
+                        router.push(`/app/deal-analysis?listingId=${item.id}`)
+                      }
+                    >
+                      View
+                    </button>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={() => handleRemoveSaved(item.id)}
+                      disabled={removingId === item.id}
+                      aria-label={`Remove ${item.title}`}
+                    >
+                      {removingId === item.id ? "…" : "✕"}
+                    </button>
                   </div>
                 </div>
               ))}

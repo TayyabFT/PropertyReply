@@ -72,7 +72,7 @@ export default function LandingNav() {
             className="btn btn-gold btn-sm"
             onClick={() => setOpen(false)}
           >
-            Join Free
+            Get Started
           </Link>
         </div>
       </div>

@@ -1507,15 +1507,15 @@
       <div class="plan-card featured">
         <div class="plan-badge">Most Popular</div>
         <div class="tag badge-green">Premium</div>
-        <div class="plan-price">£29<span>/mo</span></div>
+        <div class="plan-price">£35<span>/mo</span></div>
+        <p class="muted" style="font-size:.78rem;margin-top:-8px;">for your first 3 months, then £49/mo</p>
         <p class="plan-desc">Full access to listings, analysis, and contact details.</p>
         <ul class="plan-features">
           <li><span class="check">✓</span> Unlimited deal browsing</li>
           <li><span class="check">✓</span> Full contact details revealed</li>
           <li><span class="check">✓</span> Complete deal analysis (Flip + BTL)</li>
           <li><span class="check">✓</span> Unlimited searches & filters</li>
-          <li><span class="check">✓</span> Submit listings (up to 10/mo)</li>
-          <li><span class="check">✓</span> Email deal alerts</li>
+          <li><span class="check">✓</span> Submit listings (£10 per listing)</li>
           <li><span class="check">✓</span> Save & favourite properties</li>
           <li><span class="cross">✗</span> VIP-only exclusive deals</li>
         </ul>
@@ -1523,11 +1523,12 @@
       </div>
 
       <!-- VIP -->
-      <div class="plan-card vip">
+      <div class="plan-card vip is-coming-soon">
+        <div class="plan-coming-soon-badge">Coming Soon</div>
         <div class="tag">VIP</div>
-        <div class="plan-price">£79<span>/mo</span></div>
-        <p class="plan-desc">The complete platform with exclusive off-market deals.</p>
-        <ul class="plan-features">
+        <div class="plan-price plan-blurred">£79<span>/mo</span></div>
+        <p class="plan-desc plan-blurred">The complete platform with exclusive off-market deals.</p>
+        <ul class="plan-features plan-blurred">
           <li><span class="check">✓</span> Everything in Premium</li>
           <li><span class="check">✓</span> VIP-exclusive off-market deals</li>
           <li><span class="check">✓</span> Unlimited listing submissions</li>
@@ -1537,7 +1538,7 @@
           <li><span class="check">✓</span> Affiliate commission boost (+5%)</li>
           <li><span class="check">✓</span> Early access to new features</li>
         </ul>
-        <button class="btn btn-gold" style="width:100%;background:var(--gold-lt);">Upgrade to VIP →</button>
+        <button class="btn btn-outline" style="width:100%;" disabled>Coming Soon</button>
       </div>
     </div>
 
@@ -2435,9 +2436,9 @@
 ═══════════════════════════════════════════════════════ -->
 <section class="section" id="kyc">
   <div class="container">
-    <div class="tag mb-8">Credas Integration</div>
+    <div class="tag mb-8">Stripe Identity</div>
     <h2 class="mb-8">Identity Verification & Compliance</h2>
-    <p class="muted mb-32">Powered by Credas. Secure KYC, AML screening, and compliance checks are required to submit listings and access full contact details.</p>
+    <p class="muted mb-32">Powered by Stripe Identity. Secure KYC, AML screening, and compliance checks are required to submit listings and access full contact details.</p>
 
     <div class="kyc-flow">
 
@@ -2471,7 +2472,7 @@
         <div class="verification-badge">
           <div class="v-icon">✅</div>
           <div>
-            <h4>Identity Verified via Credas</h4>
+            <h4>Identity Verified via Stripe</h4>
             <p>Your identity has been verified. AML screening passed. Verification ID: CRED-2026-08432</p>
           </div>
         </div>
@@ -2506,7 +2507,7 @@
           <span class="c-status mono">14 Feb 2027</span>
         </div>
         <div class="compliance-row">
-          <span class="c-label">Credas Reference</span>
+          <span class="c-label">Stripe Reference</span>
           <span class="c-status mono">CRED-2026-08432</span>
         </div>
 
@@ -2520,8 +2521,8 @@
         <!-- Unverified state – shown to new users -->
         <div style="margin-top:24px;padding:24px;background:rgba(212,168,67,.07);border:1px dashed rgba(212,168,67,.3);border-radius:var(--radius);">
           <h4 style="margin-bottom:8px;font-size:.95rem;">🔐 Not yet verified?</h4>
-          <p style="font-size:.85rem;color:var(--slate);margin-bottom:16px;">Verification is required to submit listings and view contact details. The process takes under 5 minutes via Credas secure identity checks.</p>
-          <button class="btn btn-gold">Start Verification with Credas →</button>
+          <p style="font-size:.85rem;color:var(--slate);margin-bottom:16px;">Verification is required to submit listings and view contact details. The process takes under 5 minutes via Stripe Identity.</p>
+          <button class="btn btn-gold">Start Verification with Stripe →</button>
         </div>
 
       </div>
@@ -2536,7 +2537,7 @@
               <th>Check Type</th>
               <th>Result</th>
               <th>Date</th>
-              <th>Credas Ref</th>
+              <th>Stripe Ref</th>
             </tr>
           </thead>
           <tbody>
@@ -2563,7 +2564,7 @@
             </tr>
           </tbody>
         </table>
-        <p style="margin-top:12px;font-size:.78rem;color:var(--slate);">Audit records retained for 5 years in accordance with AML regulations. All checks performed via Credas API.</p>
+        <p style="margin-top:12px;font-size:.78rem;color:var(--slate);">Audit records retained for 5 years in accordance with AML regulations. All checks performed via Stripe Identity.</p>
       </div>
     </div>
   </div>
@@ -2752,7 +2753,7 @@
       <div class="trust-card">
         <h3>🔒 Privacy Policy</h3>
         <p>We take your privacy seriously. PropertyReply processes your personal data in accordance with the UK GDPR and the Data Protection Act 2018. Data is used to provide and improve the platform, communicate with you, and fulfil our legal obligations.</p>
-        <p>We use Credas as our identity verification partner. Your identity data is transmitted securely and stored in accordance with their data processing agreement. We never sell personal data to third parties.</p>
+        <p>We use Stripe Identity as our identity verification partner. Your identity data is transmitted securely and stored in accordance with their data processing agreement. We never sell personal data to third parties.</p>
         <p>You have the right to access, correct, or delete your data at any time. Contact us at privacy@propertyreply.co.uk.</p>
         <a href="#" class="inline-link" style="display:block;margin-top:14px;font-size:.85rem;">Read full Privacy Policy →</a>
       </div>
@@ -2817,7 +2818,7 @@
         <div style="display:flex;gap:10px;margin-top:16px;">
           <span class="chip">🏴󠁧󠁢󠁥󠁮󠁧󠁿 UK Based</span>
           <span class="chip">🔒 GDPR Compliant</span>
-          <span class="chip">✅ Credas Verified</span>
+          <span class="chip">✅ Identity Verified</span>
         </div>
       </div>
       <div class="footer-col">

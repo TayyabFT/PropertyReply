@@ -110,7 +110,6 @@ const navIconMap: Record<string, ComponentType<IconProps>> = {
   submit: IconPlus,
   notifications: IconBell,
   membership: IconCard,
-  affiliate: IconUsers,
   profile: IconUser,
   kyc: IconShield,
   admin: IconAdmin,

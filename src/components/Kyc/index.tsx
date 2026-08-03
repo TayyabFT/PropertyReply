@@ -1,197 +1,361 @@
-const kycSteps: { stepClass: string; num: string; label: string }[] = [
-  { stepClass: "kyc-step done", num: "✓", label: "Create Account" },
-  { stepClass: "kyc-step done", num: "✓", label: "Email Verified" },
-  { stepClass: "kyc-step active", num: "3", label: "ID Verification" },
-  { stepClass: "kyc-step", num: "4", label: "AML Check" },
-  { stepClass: "kyc-step", num: "5", label: "Verified ✓" },
-];
+"use client";
 
-const complianceRows: { label: string; status: React.ReactNode; mono?: boolean }[] = [
-  {
-    label: "Identity Document (Passport / Driving Licence)",
-    status: (
-      <>
-        <span style={{ color: "var(--green)" }}>✓</span> Verified
-      </>
-    ),
-  },
-  {
-    label: "Selfie / Liveness Check",
-    status: (
-      <>
-        <span style={{ color: "var(--green)" }}>✓</span> Passed
-      </>
-    ),
-  },
-  {
-    label: "KYC — Know Your Customer",
-    status: (
-      <>
-        <span style={{ color: "var(--green)" }}>✓</span> Completed
-      </>
-    ),
-  },
-  {
-    label: "AML — Anti-Money Laundering Screening",
-    status: (
-      <>
-        <span style={{ color: "var(--green)" }}>✓</span> Clear
-      </>
-    ),
-  },
-  {
-    label: "PEP & Sanctions Check",
-    status: (
-      <>
-        <span style={{ color: "var(--green)" }}>✓</span> Clear
-      </>
-    ),
-  },
-  { label: "Verification Date", status: "14 Feb 2026", mono: true },
-  { label: "Next Review Due", status: "14 Feb 2027", mono: true },
-  { label: "Credas Reference", status: "CRED-2026-08432", mono: true },
-];
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useAuth } from "@/lib/auth";
+import { kycApi, type KycData, ApiRequestError } from "@/lib/api";
 
-const auditTrail: {
-  user: string;
-  check: string;
-  resultLabel: string;
-  resultBadge: string;
-  date: string;
-  ref: string;
-}[] = [
-  { user: "James Smith", check: "Full KYC + AML", resultLabel: "Passed", resultBadge: "badge-green", date: "14 Feb 2026", ref: "CRED-2026-08432" },
-  { user: "A. Patel", check: "KYC", resultLabel: "In Progress", resultBadge: "badge-amber", date: "09 Jun 2026", ref: "CRED-2026-19287" },
-  { user: "Unknown123", check: "KYC", resultLabel: "Failed", resultBadge: "badge-red", date: "07 Jun 2026", ref: "CRED-2026-19104" },
-];
+type VerificationPhase = "idle" | "starting" | "invited" | "error";
+
+function kycStatusLabel(status: string) {
+  switch (status) {
+    case "approved":
+      return "Verified";
+    case "in_progress":
+      return "In Progress";
+    case "consider":
+      return "Under Review";
+    case "rejected":
+      return "Rejected";
+    default:
+      return "Pending";
+  }
+}
 
 export default function Kyc() {
+  const { token, updateUser, user } = useAuth();
+  const searchParams = useSearchParams();
+  const submitRequired = searchParams.get("reason") === "submit-required";
+  const stripeReturn = searchParams.get("stripe_return") === "1";
+
+  const [data, setData] = useState<KycData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [verificationPhase, setVerificationPhase] =
+    useState<VerificationPhase>("idle");
+  const [inviteMessage, setInviteMessage] = useState<string | null>(null);
+
+  const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const returnPollStarted = useRef(false);
+
+  const refreshStatus = async (authToken: string) => {
+    const res = await kycApi.get(authToken);
+    setData(res.data);
+    if (user) {
+      updateUser({ ...user, kycStatus: res.data.status });
+    }
+    return res.data;
+  };
+
+  useEffect(() => {
+    if (!token) return;
+    const authToken = token;
+    let cancelled = false;
+
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await kycApi.get(authToken);
+        if (!cancelled) setData(res.data);
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof ApiRequestError
+              ? err.message
+              : "Failed to load verification status.",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearTimeout(pollRef.current);
+    };
+  }, []);
+
+  const pollForCompletion = (authToken: string, attemptsLeft: number) => {
+    if (attemptsLeft <= 0) return;
+
+    pollRef.current = setTimeout(async () => {
+      try {
+        const latest = await refreshStatus(authToken);
+        if (latest.status === "in_progress" || latest.status === "pending") {
+          pollForCompletion(authToken, attemptsLeft - 1);
+        }
+      } catch {
+        // ignore transient errors and keep polling
+        pollForCompletion(authToken, attemptsLeft - 1);
+      }
+    }, 5000);
+  };
+
+  // After Stripe Identity redirect, sync status from Stripe via API and poll
+  useEffect(() => {
+    if (!token || !stripeReturn || returnPollStarted.current) return;
+    returnPollStarted.current = true;
+
+    (async () => {
+      try {
+        const latest = await refreshStatus(token);
+        if (latest.status === "approved") {
+          setInviteMessage("Your identity has been verified successfully.");
+          setVerificationPhase("invited");
+          return;
+        }
+        if (latest.status === "rejected") {
+          setInviteMessage(null);
+          setVerificationPhase("idle");
+          return;
+        }
+        setInviteMessage(
+          "Thanks — Stripe is finishing your verification. This page will update automatically.",
+        );
+        setVerificationPhase("invited");
+        pollForCompletion(token, 36);
+      } catch {
+        setInviteMessage(
+          "Checking verification status… If this stays pending, click Continue Verification.",
+        );
+        pollForCompletion(token, 36);
+      }
+    })();
+  }, [token, stripeReturn]);
+
+  const startVerification = async () => {
+    if (!token) return;
+    setVerificationPhase("starting");
+    setError(null);
+    setInviteMessage(null);
+
+    try {
+      const res = await kycApi.startVerification(token);
+      setInviteMessage(res.data.message);
+      setVerificationPhase("invited");
+      await refreshStatus(token);
+
+      if (res.data.url) {
+        window.location.href = res.data.url;
+        return;
+      }
+
+      pollForCompletion(token, 24); // poll every 5s for ~2 minutes (static / no redirect)
+    } catch (err) {
+      setVerificationPhase("error");
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Unable to start identity verification.",
+      );
+    }
+  };
+
+  const stepClass = (state: string) =>
+    state === "done"
+      ? "kyc-step done"
+      : state === "active"
+        ? "kyc-step active"
+        : "kyc-step";
+
+  const canStartVerification =
+    data &&
+    !data.verified &&
+    data.status !== "consider" &&
+    (data.status === "pending" || data.status === "rejected");
+
+  const canResumeVerification =
+    data &&
+    !data.verified &&
+    data.status === "in_progress" &&
+    !data.staticMode;
+
   return (
     <section className="section" id="kyc">
       <div className="container">
-        <div className="tag mb-8">Credas Integration</div>
+        <div className="tag mb-8">Identity Verification</div>
         <h2 className="mb-8">Identity Verification & Compliance</h2>
         <p className="muted mb-32">
-          Powered by Credas. Secure KYC, AML screening, and compliance checks
-          are required to submit listings and access full contact details.
+          Secure KYC and AML screening are required to submit listings and
+          access full seller contact details. Powered by Stripe Identity.
         </p>
 
-        <div className="kyc-flow">
-          <div className="kyc-steps">
-            {kycSteps.map((step) => (
-              <div className={step.stepClass} key={step.label}>
-                <div className="kyc-step-num">{step.num}</div>
-                <p>{step.label}</p>
-              </div>
-            ))}
+        {submitRequired && (
+          <div className="alert alert-error" style={{ marginBottom: "16px" }}>
+            <span>!</span>
+            <span>
+              You must complete identity verification before submitting a
+              property listing. Please verify your identity below.
+            </span>
           </div>
+        )}
 
-          <div className="kyc-card">
-            <div className="verification-badge">
-              <div className="v-icon">✅</div>
-              <div>
-                <h4>Identity Verified via Credas</h4>
-                <p>
-                  Your identity has been verified. AML screening passed.
-                  Verification ID: CRED-2026-08432
-                </p>
-              </div>
-            </div>
-
-            <h3 className="mb-16">Compliance Status</h3>
-            {complianceRows.map((row) => (
-              <div className="compliance-row" key={row.label}>
-                <span className="c-label">{row.label}</span>
-                <span className={row.mono ? "c-status mono" : "c-status"}>
-                  {row.status}
-                </span>
-              </div>
-            ))}
-
-            <div className="divider"></div>
-
-            <div className="alert alert-info">
-              <span>ℹ️</span>
-              <div>
-                Your verification data is stored securely in compliance with
-                GDPR. It is used solely for the purpose of identity and AML
-                screening. View our{" "}
-                <a href="#trust" className="inline-link">
-                  Privacy Policy
-                </a>{" "}
-                for full details.
-              </div>
-            </div>
-
-            <div
-              style={{
-                marginTop: "24px",
-                padding: "24px",
-                background: "rgba(212,168,67,.07)",
-                border: "1px dashed rgba(212,168,67,.3)",
-                borderRadius: "var(--radius)",
-              }}
-            >
-              <h4 style={{ marginBottom: "8px", fontSize: ".95rem" }}>
-                🔐 Not yet verified?
-              </h4>
-              <p
-                style={{
-                  fontSize: ".85rem",
-                  color: "var(--slate)",
-                  marginBottom: "16px",
-                }}
-              >
-                Verification is required to submit listings and view contact
-                details. The process takes under 5 minutes via Credas secure
-                identity checks.
-              </p>
-              <button className="btn btn-gold">
-                Start Verification with Credas →
-              </button>
-            </div>
+        {loading && <p className="muted">Loading verification status…</p>}
+        {error && (
+          <div className="alert alert-error" style={{ marginBottom: "16px" }}>
+            <span>!</span>
+            <span>{error}</span>
           </div>
+        )}
 
-          <div className="card" style={{ marginTop: "28px" }}>
-            <h3 className="mb-16">🛡 Admin: Compliance Audit Trail</h3>
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Check Type</th>
-                  <th>Result</th>
-                  <th>Date</th>
-                  <th>Credas Ref</th>
-                </tr>
-              </thead>
-              <tbody>
-                {auditTrail.map((row) => (
-                  <tr key={row.ref}>
-                    <td>{row.user}</td>
-                    <td>{row.check}</td>
-                    <td>
-                      <span className={`tag ${row.resultBadge}`}>
-                        {row.resultLabel}
+        {inviteMessage && (
+          <div
+            className="alert"
+            style={{
+              marginBottom: "16px",
+              background: "rgba(34,197,94,.1)",
+              border: "1px solid rgba(34,197,94,.3)",
+            }}
+          >
+            <span>✓</span>
+            <span>{inviteMessage}</span>
+          </div>
+        )}
+
+        {!loading && data && (
+          <div className="kyc-flow">
+            <div className="kyc-steps">
+              {data.steps.map((step) => (
+                <div className={stepClass(step.state)} key={step.label}>
+                  <div className="kyc-step-num">{step.num}</div>
+                  <p>{step.label}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="kyc-card">
+              <div className="verification-badge">
+                <div className="v-icon">
+                  {data.verified
+                    ? "✅"
+                    : data.status === "in_progress" || data.status === "consider"
+                      ? "⏳"
+                      : data.status === "rejected"
+                        ? "✗"
+                        : "🔐"}
+                </div>
+                <div>
+                  <h4>{kycStatusLabel(data.status)}</h4>
+                  <p>
+                    {data.verified
+                      ? `Your identity has been verified and AML screening passed.${
+                          data.reference ? ` Reference: ${data.reference}` : ""
+                        }`
+                      : data.status === "in_progress"
+                        ? data.staticMode
+                          ? "Demo mode: your request is marked in-progress. An admin will review and approve it manually."
+                          : "Complete verification on the secure Stripe Identity page. This page updates automatically once you're done."
+                        : data.status === "consider"
+                          ? "Your verification requires manual review. Our team will be in touch."
+                          : data.status === "rejected"
+                            ? `Verification was not successful${
+                                data.lastError?.reason
+                                  ? `: ${data.lastError.reason}`
+                                  : ""
+                              }. Click Start Verification below to try again.`
+                            : "Complete identity verification to unlock listing submission and seller contact details."}
+                  </p>
+                </div>
+              </div>
+
+              <h3 className="mb-16">Compliance Status</h3>
+              {data.compliance.map((row) => (
+                <div className="compliance-row" key={row.label}>
+                  <span className="c-label">{row.label}</span>
+                  <span className={row.mono ? "c-status mono" : "c-status"}>
+                    {row.ok !== undefined && (
+                      <span
+                        style={{
+                          color: row.ok ? "var(--green)" : "var(--slate)",
+                        }}
+                      >
+                        {row.ok ? "✓ " : ""}
                       </span>
-                    </td>
-                    <td className="mono">{row.date}</td>
-                    <td className="mono">{row.ref}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p
-              style={{
-                marginTop: "12px",
-                fontSize: ".78rem",
-                color: "var(--slate)",
-              }}
-            >
-              Audit records retained for 5 years in accordance with AML
-              regulations. All checks performed via Credas API.
-            </p>
+                    )}
+                    {row.value}
+                  </span>
+                </div>
+              ))}
+
+              {data.verified && (
+                <div
+                  style={{
+                    marginTop: "24px",
+                    padding: "24px",
+                    background: "rgba(34,197,94,.08)",
+                    border: "1px solid rgba(34,197,94,.3)",
+                    borderRadius: "var(--radius)",
+                  }}
+                >
+                  <h4 style={{ marginBottom: "8px", fontSize: ".95rem" }}>
+                    You&apos;re verified
+                  </h4>
+                  <p
+                    style={{
+                      fontSize: ".85rem",
+                      color: "var(--slate)",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    Your identity checks are complete. You can now submit a
+                    property deal for review.
+                  </p>
+                  <Link href="/app/submit" className="btn btn-gold">
+                    Submit a Deal Now →
+                  </Link>
+                </div>
+              )}
+
+              {(canStartVerification || canResumeVerification) && (
+                <div
+                  style={{
+                    marginTop: "24px",
+                    padding: "24px",
+                    background: "rgba(212,168,67,.07)",
+                    border: "1px dashed rgba(212,168,67,.3)",
+                    borderRadius: "var(--radius)",
+                  }}
+                >
+                  <h4 style={{ marginBottom: "8px", fontSize: ".95rem" }}>
+                    {canResumeVerification
+                      ? "Continue your verification"
+                      : "Start your verification"}
+                  </h4>
+                  <p
+                    style={{
+                      fontSize: ".85rem",
+                      color: "var(--slate)",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    You&apos;ll be redirected to Stripe Identity to securely
+                    capture your ID document and a matching selfie. The process
+                    usually takes a few minutes.
+                  </p>
+                  <button
+                    className="btn btn-gold"
+                    onClick={startVerification}
+                    disabled={verificationPhase === "starting"}
+                  >
+                    {verificationPhase === "starting"
+                      ? "Opening Stripe…"
+                      : canResumeVerification
+                        ? "Continue Verification →"
+                        : "Start Verification →"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

@@ -16,6 +16,28 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (ready && !user) router.replace("/login");
   }, [ready, user, router]);
 
+  // Users without an active subscription are locked out of the app until
+  // they subscribe — the membership page itself must stay reachable.
+  // Admins bypass this, matching the backend's requireActivePlan middleware.
+  useEffect(() => {
+    if (
+      ready &&
+      user &&
+      user.role !== "admin" &&
+      user.subscriptionStatus !== "active" &&
+      !pathname.startsWith("/app/membership")
+    ) {
+      router.replace("/app/membership");
+    }
+  }, [ready, user, pathname, router]);
+
+  // Restrict the admin area to admin accounts only.
+  useEffect(() => {
+    if (ready && user && user.role !== "admin" && pathname.startsWith("/app/admin")) {
+      router.replace("/app/dashboard");
+    }
+  }, [ready, user, pathname, router]);
+
   // Close the mobile drawer whenever the route changes.
   useEffect(() => {
     setNavOpen(false);

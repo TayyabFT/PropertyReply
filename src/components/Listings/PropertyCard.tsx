@@ -1,31 +1,32 @@
+"use client";
+
+import Link from "next/link";
 import LockIcon from "@/components/icons/LockIcon";
+import type { ListingProperty } from "@/lib/api";
 
-export type PropertyTag = {
-  label: string;
-  badge?: string;
+type PropertyCardProps = {
+  property: ListingProperty;
+  onView?: (property: ListingProperty) => void;
+  onSave?: (property: ListingProperty) => void;
+  onUnlock?: (property: ListingProperty) => void;
+  saving?: boolean;
 };
 
-export type Property = {
-  id: string;
-  placeholder: string;
-  discount: string;
-  featured?: boolean;
-  lock?: {
-    label: string;
-    buttonText: string;
+export default function PropertyCard({
+  property,
+  onView,
+  onSave,
+  onUnlock,
+  saving = false,
+}: PropertyCardProps) {
+  const handlePrimaryAction = () => {
+    if (property.isLocked) {
+      onUnlock?.(property);
+      return;
+    }
+    onView?.(property);
   };
-  title: string;
-  location: string;
-  asking: string;
-  market: string;
-  saving?: string;
-  tags: PropertyTag[];
-  footerButtonLabel: string;
-  footerButtonClass: string;
-  meta: string;
-};
 
-export default function PropertyCard({ property }: { property: Property }) {
   return (
     <div className="property-card">
       <div className="prop-img">
@@ -38,7 +39,12 @@ export default function PropertyCard({ property }: { property: Property }) {
           <div className="prop-lock">
             <LockIcon />
             <span>{property.lock.label}</span>
-            <button className="btn btn-gold btn-sm" style={{ marginTop: "6px" }}>
+            <button
+              type="button"
+              className="btn btn-gold btn-sm"
+              style={{ marginTop: "6px" }}
+              onClick={() => onUnlock?.(property)}
+            >
               {property.lock.buttonText}
             </button>
           </div>
@@ -74,12 +80,34 @@ export default function PropertyCard({ property }: { property: Property }) {
           ))}
         </div>
         <div className="prop-footer">
-          <button className={property.footerButtonClass}>
-            {property.footerButtonLabel}
-          </button>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <button
+              type="button"
+              className={property.footerButtonClass}
+              onClick={handlePrimaryAction}
+            >
+              {property.footerButtonLabel}
+            </button>
+            <button
+              type="button"
+              className={
+                property.isSaved
+                  ? "btn btn-gold btn-sm"
+                  : "btn btn-outline btn-sm"
+              }
+              onClick={() => onSave?.(property)}
+              disabled={saving}
+              title={property.isSaved ? "Remove from saved" : "Save deal"}
+              aria-label={property.isSaved ? "Remove from saved" : "Save deal"}
+            >
+              {saving ? "…" : property.isSaved ? "♥" : "♡"}
+            </button>
+          </div>
           <span className="prop-meta">{property.meta}</span>
         </div>
       </div>
     </div>
   );
 }
+
+export type { ListingProperty as Property };

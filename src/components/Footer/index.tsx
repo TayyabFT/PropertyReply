@@ -14,7 +14,7 @@ export default function Footer() {
             <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
               <span className="chip">🏴󠁧󠁢󠁥󠁮󠁧󠁿 UK Based</span>
               <span className="chip">🔒 GDPR Compliant</span>
-              <span className="chip">✅ Credas Verified</span>
+              <span className="chip">✅ Identity Verified</span>
             </div>
           </div>
           <div className="footer-col">
@@ -22,13 +22,12 @@ export default function Footer() {
             <a href="#listings">Browse Deals</a>
             <a href="/register">Submit a Deal</a>
             <a href="#membership">Membership Plans</a>
-            <a href="/register">Affiliate Programme</a>
             <a href="/register">Deal Analysis</a>
           </div>
           <div className="footer-col">
             <h5>Account</h5>
             <a href="/login">Sign In</a>
-            <a href="/register">Register Free</a>
+            <a href="/register">Register</a>
             <a href="/login">Dashboard</a>
             <a href="/login">Profile</a>
             <a href="/login">KYC Verification</a>

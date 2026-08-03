@@ -13,6 +13,11 @@ function iconKey(href: string) {
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
+  const visibleGroups = navGroups.filter(
+    (group) => group.label !== "Administration" || isAdmin,
+  );
 
   return (
     <aside className="app-sidebar">
@@ -30,7 +35,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="app-nav">
-        {navGroups.map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group.label}>
             <div className="app-nav-label">{group.label}</div>
             {group.items.map((item) => {
@@ -62,7 +67,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <div className="avatar">{user?.initials ?? "PR"}</div>
           <div>
             <div className="u-name">{user?.name ?? "Member"}</div>
-            <div className="u-plan">{user?.plan ?? "Free"} Member</div>
+            <div className="u-plan">{user?.plan ? `${user.plan} Member` : "No Plan"}</div>
           </div>
         </Link>
       </div>

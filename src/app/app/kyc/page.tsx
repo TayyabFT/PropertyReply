@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import Kyc from "@/components/Kyc";
 
 export default function KycPage() {
-  return <Kyc />;
+  return (
+    <Suspense fallback={<p className="muted">Loading verification…</p>}>
+      <Kyc />
+    </Suspense>
+  );
 }

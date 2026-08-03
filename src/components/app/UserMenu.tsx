@@ -21,8 +21,8 @@ export default function UserMenu() {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await signOut();
     router.push("/");
   };
 

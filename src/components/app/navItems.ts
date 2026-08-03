@@ -18,14 +18,13 @@ export const navGroups: NavGroup[] = [
       { href: "/app/listings", label: "Browse Deals", icon: "🏠" },
       { href: "/app/deal-analysis", label: "Deal Analysis", icon: "📈" },
       { href: "/app/submit", label: "Submit Deal", icon: "📝" },
-      { href: "/app/notifications", label: "Notifications", icon: "🔔", badge: "2" },
+      { href: "/app/notifications", label: "Notifications", icon: "🔔" },
     ],
   },
   {
     label: "Account",
     items: [
       { href: "/app/membership", label: "Membership", icon: "💳" },
-      { href: "/app/affiliate", label: "Affiliate", icon: "🤝" },
       { href: "/app/profile", label: "Profile", icon: "👤" },
       { href: "/app/kyc", label: "KYC / Compliance", icon: "✅" },
     ],
