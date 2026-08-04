@@ -72,7 +72,7 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
             <h2>{isRegister ? "Create your account" : "Welcome back"}</h2>
             <p className="sub">
               {isRegister
-                ? "Join 18,000+ investors finding BMV deals every day."
+                ? "Join many investors finding BMV deals every day."
                 : "Sign in to access your deals, dashboard, and listings."}
             </p>
 

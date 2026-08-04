@@ -405,6 +405,17 @@
   .plan-features li:last-child { border-bottom: none; }
   .check { color: var(--green); flex-shrink: 0; }
   .cross { color: var(--slate); flex-shrink: 0; }
+
+  .enquiries-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.2fr);
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .enquiries-layout { grid-template-columns: 1fr; }
+  }
+
   .plan-card.is-coming-soon {
     position: relative;
   }

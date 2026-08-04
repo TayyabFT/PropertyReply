@@ -629,6 +629,102 @@ export const dealAnalysisApi = {
   },
 };
 
+export type EnquiryMessage = {
+  id: string;
+  role: "buyer" | "seller";
+  authorName: string;
+  message: string;
+  createdAt: string;
+  createdAtLabel: string;
+  isMine: boolean;
+};
+
+export type EnquiryListItem = {
+  id: string;
+  box: "inbox" | "sent";
+  listingId: string | null;
+  propertyTitle: string;
+  location: string;
+  askingPrice: number | null;
+  status: string;
+  unread: boolean;
+  counterparty: { name: string; email: string; phone: string };
+  preview: string;
+  lastMessageAt: string;
+  lastMessageAtLabel: string;
+  createdAt: string;
+  createdAtLabel: string;
+  replyCount: number;
+};
+
+export type EnquiryDetail = EnquiryListItem & {
+  messages: EnquiryMessage[];
+  canReply: boolean;
+};
+
+export const enquiriesApi = {
+  list(token: string, box: "all" | "inbox" | "sent" = "all") {
+    return request<{
+      success: boolean;
+      data: {
+        box: "all" | "inbox" | "sent";
+        unreadCount: number;
+        inboxUnread?: number;
+        sentUnread?: number;
+        total: number;
+        enquiries: EnquiryListItem[];
+      };
+    }>(`/enquiries?box=${box}`, { method: "GET" }, token);
+  },
+
+  unreadCount(token: string) {
+    return request<{
+      success: boolean;
+      data: {
+        unreadCount: number;
+        inboxUnread?: number;
+        sentUnread?: number;
+      };
+    }>("/enquiries/unread-count", { method: "GET" }, token);
+  },
+
+  get(token: string, id: string) {
+    return request<{ success: boolean; data: EnquiryDetail }>(
+      `/enquiries/${id}`,
+      { method: "GET" },
+      token,
+    );
+  },
+
+  reply(token: string, id: string, message: string) {
+    return request<{
+      success: boolean;
+      message: string;
+      data: EnquiryDetail;
+    }>(
+      `/enquiries/${id}/reply`,
+      { method: "POST", body: JSON.stringify({ message }) },
+      token,
+    );
+  },
+
+  markRead(token: string, id: string) {
+    return request<{ success: boolean; data: { id: string; unread: boolean } }>(
+      `/enquiries/${id}/read`,
+      { method: "POST" },
+      token,
+    );
+  },
+
+  close(token: string, id: string) {
+    return request<{
+      success: boolean;
+      message: string;
+      data: { id: string; status: string };
+    }>(`/enquiries/${id}/close`, { method: "POST" }, token);
+  },
+};
+
 export const billingApi = {
   checkout(token: string, plan: "Premium" | "VIP") {
     return request<{ success: boolean; data: { url: string } }>(

@@ -60,6 +60,13 @@ export default function UserMenu() {
             <span>💳</span> Membership
           </Link>
           <Link
+            href="/app/enquiries"
+            className="user-menu-item"
+            onClick={() => setOpen(false)}
+          >
+            <span>💬</span> Enquiries
+          </Link>
+          <Link
             href="/app/kyc"
             className="user-menu-item"
             onClick={() => setOpen(false)}

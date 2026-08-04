@@ -97,7 +97,12 @@ export default function ContactModal({
               {sentMessage ? (
                 <div className="alert alert-success">
                   <span>✓</span>
-                  <span>{sentMessage}</span>
+                  <span>
+                    {sentMessage}{" "}
+                    <Link href="/app/enquiries" style={{ fontWeight: 700 }}>
+                      Open Enquiries →
+                    </Link>
+                  </span>
                 </div>
               ) : (
                 <>

@@ -42,7 +42,7 @@ export default function Hero() {
                 Submit a Deal
               </a>
             </div>
-            <div className="hero-stats">
+            {/* <div className="hero-stats">
               <div className="stat-item">
                 <h3>2,400+</h3>
                 <p>Active Listings</p>
@@ -59,7 +59,7 @@ export default function Hero() {
                 <h3>18K+</h3>
                 <p>Members</p>
               </div>
-            </div>
+            </div> */}
           </div>
 
           <div className="hero-right">

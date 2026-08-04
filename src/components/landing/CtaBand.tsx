@@ -9,10 +9,6 @@ export default function CtaBand() {
             Start Today
           </div>
           <h2>Ready to find your next below-market deal?</h2>
-          <p>
-            Join 18,000+ UK investors getting verified BMV deals, full analysis,
-            and seller contacts. Create your account in under a minute.
-          </p>
           <div className="cta-actions">
             <Link href="/register" className="btn btn-gold">
               Get Started →
