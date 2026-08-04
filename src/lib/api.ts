@@ -1,5 +1,4 @@
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://property-relpy-backend.vercel.app/api";
+const API_URL = "https://property-relpy-backend.vercel.app/api";
 
 export type ApiUser = {
   id: string;
