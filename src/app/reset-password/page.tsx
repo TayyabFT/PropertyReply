@@ -50,7 +50,7 @@ function ResetPasswordForm() {
     <div className="auth-page">
       <div className="auth-split">
         <div className="auth-brand">
-          <BrandLogo href="/" height={56} />
+          <BrandLogo href="/" iconSize={48} />
           <h2 style={{ marginTop: "28px" }}>
             Choose a <span className="text-gradient">new password</span> for
             your account.

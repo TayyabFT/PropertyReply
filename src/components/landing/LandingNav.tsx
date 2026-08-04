@@ -35,7 +35,7 @@ export default function LandingNav() {
   return (
     <nav className="page-nav">
       <div className="container">
-        <BrandLogo href="#hero" height={44} onClick={() => setOpen(false)} />
+        <BrandLogo href="#hero" iconSize={40} onClick={() => setOpen(false)} />
 
         <button
           className="nav-toggle"

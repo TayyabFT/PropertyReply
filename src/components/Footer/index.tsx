@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand">
-            <BrandLogo asDiv height={64} />
+            <BrandLogo asDiv iconSize={44} />
             <p>
               The UK&apos;s leading marketplace for below-market-value property
               deals. Connecting motivated sellers with active investors.

@@ -34,7 +34,7 @@ export default function ResendVerificationPage() {
     <div className="auth-page">
       <div className="auth-split">
         <div className="auth-brand">
-          <BrandLogo href="/" height={56} />
+          <BrandLogo href="/" iconSize={48} />
           <h2 style={{ marginTop: "28px" }}>
             Get a fresh <span className="text-gradient">verification link</span>.
           </h2>

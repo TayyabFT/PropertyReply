@@ -56,7 +56,7 @@ function VerifyEmailStatus() {
     <div className="auth-page">
       <div className="auth-split">
         <div className="auth-brand">
-          <BrandLogo href="/" height={56} />
+          <BrandLogo href="/" iconSize={48} />
           <h2 style={{ marginTop: "28px" }}>
             Confirming your <span className="text-gradient">email address</span>.
           </h2>

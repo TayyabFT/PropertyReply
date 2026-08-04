@@ -3,43 +3,56 @@ import Link from "next/link";
 type BrandLogoProps = {
   href?: string;
   className?: string;
-  /** CSS height for the logo image */
-  height?: number;
+  /** Size of the icon mark before the text */
+  iconSize?: number;
   onClick?: () => void;
   /** Use as a non-link brand mark (e.g. footer) */
   asDiv?: boolean;
 };
 
 /**
- * Site logo from /public/assets/logo.jpeg
+ * Icon mark + classic PropertyReply wordmark.
+ * Icon: /public/assets/favicon.png (logo mark)
+ * Text: PropertyReply (same as before)
  */
 export default function BrandLogo({
   href = "/",
   className = "logo brand-logo",
-  height = 42,
+  iconSize = 36,
   onClick,
   asDiv = false,
 }: BrandLogoProps) {
-  const image = (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src="/assets/logo.jpeg"
-      alt="PropertyReply"
-      className="brand-logo-img"
-      height={height}
-      style={{ height: `${height}px`, width: "auto", display: "block" }}
-    />
+  const content = (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/assets/favicon.png"
+        alt=""
+        aria-hidden="true"
+        className="brand-logo-mark"
+        width={iconSize}
+        height={iconSize}
+        style={{ width: iconSize, height: iconSize }}
+      />
+      <span className="brand-logo-wordmark">
+        Property<span>Reply</span>
+      </span>
+    </>
   );
 
   if (asDiv) {
-    return <div className={className}>{image}</div>;
+    return <div className={className}>{content}</div>;
   }
 
-  // Hash links (landing nav) must stay as <a>
   if (href.startsWith("#")) {
     return (
-      <a href={href} className={className} onClick={onClick} aria-label="PropertyReply">
-        {image}
+      <a
+        href={href}
+        className={className}
+        onClick={onClick}
+        aria-label="PropertyReply"
+      >
+        {content}
       </a>
     );
   }
@@ -51,7 +64,7 @@ export default function BrandLogo({
       onClick={onClick}
       aria-label="PropertyReply"
     >
-      {image}
+      {content}
     </Link>
   );
 }

@@ -25,7 +25,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <div className="app-sidebar-head">
         <BrandLogo
           href="/app/dashboard"
-          height={40}
+          iconSize={38}
           onClick={onNavigate}
         />
         <button

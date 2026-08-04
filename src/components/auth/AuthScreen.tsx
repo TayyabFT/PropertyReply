@@ -55,7 +55,7 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
     <div className="auth-page">
       <div className="auth-split">
         <div className="auth-brand">
-          <BrandLogo href="/" height={56} />
+          <BrandLogo href="/" iconSize={48} />
           <h2 style={{ marginTop: "28px" }}>
             The UK&apos;s #1 marketplace for{" "}
             <span className="text-gradient">below-market</span> property deals.
