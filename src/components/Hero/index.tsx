@@ -62,7 +62,7 @@ export default function Hero() {
             </div> */}
           </div>
 
-          <div className="hero-right">
+          {/* <div className="hero-right">
             <div className="hero-search">
               <div className="hero-search-title">
                 <span className="search-icon">
@@ -129,7 +129,7 @@ export default function Hero() {
                 ))}
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </section>
