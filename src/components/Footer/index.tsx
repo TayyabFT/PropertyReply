@@ -11,7 +11,7 @@ export default function Footer() {
               The UK&apos;s leading marketplace for below-market-value property
               deals. Connecting motivated sellers with active investors.
             </p>
-            <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+            <div className="footer-chips">
               <span className="chip">🏴󠁧󠁢󠁥󠁮󠁧󠁿 UK Based</span>
               <span className="chip">🔒 GDPR Compliant</span>
               <span className="chip">✅ Identity Verified</span>

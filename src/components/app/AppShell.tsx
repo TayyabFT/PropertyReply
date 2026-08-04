@@ -43,6 +43,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     setNavOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    document.body.classList.toggle("app-nav-open", navOpen);
+    return () => document.body.classList.remove("app-nav-open");
+  }, [navOpen]);
+
   if (!ready || !user) {
     return (
       <div className="app-loading">

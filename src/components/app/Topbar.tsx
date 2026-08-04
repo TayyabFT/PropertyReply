@@ -17,8 +17,8 @@ export default function Topbar({ onMenu }: { onMenu: () => void }) {
       </button>
 
       <div className="app-breadcrumb">
-        <span>PropertyReply</span>
-        <span>/</span>
+        <span className="crumb-prefix">PropertyReply</span>
+        <span className="crumb-sep">/</span>
         <span className="crumb-current">{title}</span>
       </div>
 

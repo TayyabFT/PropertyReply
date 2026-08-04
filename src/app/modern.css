@@ -244,7 +244,12 @@ label {
   padding: 130px 0 90px;
   background: transparent;
 }
-.hero-inner { gap: 72px; }
+/* Single column — search panel currently unused */
+.hero-inner {
+  gap: 72px;
+  grid-template-columns: 1fr;
+  max-width: 720px;
+}
 
 .hero h1 {
   background: linear-gradient(135deg, #0F172A 0%, var(--gold) 100%);
@@ -671,3 +676,264 @@ footer {
    EMPTY STATES
 ───────────────────────────────────────────────────────── */
 .empty-state { color: var(--slate); }
+
+/* Utility classes used across landing/app */
+.text-gradient {
+  background: linear-gradient(135deg, var(--gold-lt, #2dd4bf), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.section-header { margin-bottom: 40px; }
+.section-eyebrow {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.app-loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--slate);
+  background: var(--mist, #f8fafc);
+}
+.app-loading-spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid rgba(15, 118, 110, 0.15);
+  border-top-color: var(--gold);
+  animation: pr-spin 0.7s linear infinite;
+}
+@keyframes pr-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RESPONSIVE — must live here (modern.css loads after globals)
+───────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .membership-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 1024px) {
+  .page-nav .nav-links {
+    position: fixed;
+    top: var(--nav-h, 72px);
+    left: 0;
+    right: 0;
+    z-index: 90;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(14px);
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0;
+    padding: 16px 20px 22px;
+    transform: translateY(-120%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.28s ease, opacity 0.28s ease;
+    max-height: calc(100dvh - var(--nav-h, 72px));
+    overflow-y: auto;
+  }
+  .page-nav .nav-links.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .page-nav .nav-links .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .page-nav .nav-links .nav-link-a {
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+  .nav-toggle { display: inline-flex; }
+}
+
+@media (max-width: 900px) {
+  .container { padding: 0 18px; }
+  .section { padding: 64px 0; }
+  .hero {
+    padding: 108px 0 56px;
+  }
+  .hero h1 {
+    font-size: clamp(1.85rem, 6vw, 2.6rem);
+    line-height: 1.15;
+  }
+  .hero-actions {
+    flex-wrap: wrap;
+  }
+  .hero-actions .btn {
+    flex: 1 1 160px;
+    justify-content: center;
+    text-align: center;
+  }
+  .filters-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: end;
+  }
+  .filters-bar .form-group {
+    min-width: 0;
+    flex: none;
+    width: 100%;
+  }
+  .filters-bar > .btn,
+  .filters-bar > button {
+    grid-column: 1 / -1;
+    width: 100%;
+    align-self: stretch;
+  }
+  .listings-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .sort-row {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sort-btn { flex-shrink: 0; }
+  .cta-band { padding: 40px 24px; }
+  .cta-actions { flex-direction: column; }
+  .cta-actions .btn { width: 100%; justify-content: center; }
+  .auth-brand { padding: 40px 28px; }
+  .auth-form-panel { padding: 40px 28px; }
+  .plan-card { padding: 28px 22px; }
+  .checkbox-grid { grid-template-columns: 1fr 1fr; }
+  .dash-table-wrap,
+  .admin-table-wrap,
+  .table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .dash-table,
+  .admin-table {
+    min-width: 640px;
+  }
+}
+
+@media (max-width: 760px) {
+  .section { padding: 48px 0; }
+  .section-header { margin-bottom: 28px; }
+  .membership-grid { grid-template-columns: 1fr; }
+  .auth-split { grid-template-columns: 1fr; }
+  .auth-brand { display: none; }
+  .auth-form-panel {
+    padding: 28px 18px 40px;
+    min-height: 100dvh;
+  }
+  .auth-form {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+  .footer-brand { grid-column: 1 / -1; }
+  .footer-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .prop-prices {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .prop-footer {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .step-indicator {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .kyc-steps {
+    grid-template-columns: 1fr;
+  }
+  body {
+    background-attachment: scroll;
+  }
+}
+
+@media (max-width: 620px) {
+  .container { padding: 0 14px; }
+  .hero { padding: 96px 0 40px; }
+  .hero-desc { font-size: 0.95rem; }
+  .filters-bar { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .app-topbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .app-breadcrumb {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+  .app-breadcrumb .crumb-prefix,
+  .app-breadcrumb .crumb-sep {
+    display: none;
+  }
+  .crumb-current {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+  .app-content { padding: 16px 12px 28px; }
+  .submit-body { padding: 18px 14px; }
+  .modal { padding: 20px 16px; }
+  .checkbox-grid { grid-template-columns: 1fr; }
+  .analysis-grid,
+  .dash-stats { grid-template-columns: 1fr; }
+  .brand-logo-mark {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .brand-logo-wordmark { font-size: 1.15rem; }
+  .page-nav .container {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero h1 { font-size: 1.7rem; }
+  .btn { padding: 11px 18px; font-size: 0.88rem; }
+  .tag { font-size: 11px; letter-spacing: 0.1em; }
+  .plan-price { font-size: 2rem; }
+}
+
+/* Prevent page scroll when mobile menus are open */
+body.nav-drawer-open,
+body.app-nav-open {
+  overflow: hidden;
+  touch-action: none;
+}

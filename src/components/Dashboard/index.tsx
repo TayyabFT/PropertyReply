@@ -211,6 +211,7 @@ export default function Dashboard() {
                 + Submit New
               </Link>
             </div>
+            <div className="table-scroll">
             <table className="dash-table">
               <thead>
                 <tr>
@@ -243,6 +244,7 @@ export default function Dashboard() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           <div className="card">

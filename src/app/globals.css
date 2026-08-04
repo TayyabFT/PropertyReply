@@ -565,6 +565,13 @@
   .dash-stat .ds-change { font-size: .75rem; margin-top: 3px; }
   .ds-change.up { color: var(--green); }
   .ds-change.dn { color: var(--red); }
+  .dash-table-wrap,
+  .admin-table-wrap,
+  .table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .dash-table {
     width: 100%; border-collapse: collapse;
     font-size: .87rem;
@@ -624,7 +631,11 @@
     border-bottom: 1px solid rgba(0,0,0,.07);
     display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
   }
-  .admin-card-body { padding: 24px; }
+  .admin-card-body {
+    padding: 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .admin-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
   .admin-table th {
     text-align: left; padding: 0 14px 10px 0;

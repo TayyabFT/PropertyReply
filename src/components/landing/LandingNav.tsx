@@ -32,10 +32,29 @@ export default function LandingNav() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    document.body.classList.toggle("nav-drawer-open", open);
+    return () => document.body.classList.remove("nav-drawer-open");
+  }, [open]);
+
+  useEffect(() => {
+    const nav = document.querySelector(".page-nav");
+    if (!(nav instanceof HTMLElement)) return;
+    const syncHeight = () => {
+      document.documentElement.style.setProperty(
+        "--nav-h",
+        `${nav.offsetHeight}px`,
+      );
+    };
+    syncHeight();
+    window.addEventListener("resize", syncHeight);
+    return () => window.removeEventListener("resize", syncHeight);
+  }, []);
+
   return (
     <nav className="page-nav">
       <div className="container">
-        <BrandLogo href="#hero" iconSize={40} onClick={() => setOpen(false)} />
+        <BrandLogo href="#hero" iconSize={36} onClick={() => setOpen(false)} />
 
         <button
           className="nav-toggle"

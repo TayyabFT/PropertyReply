@@ -487,6 +487,7 @@ export default function SubmitListing() {
                 {submissions.length} total
               </span>
             </div>
+            <div className="table-scroll">
             <table className="dash-table">
               <thead>
                 <tr>
@@ -531,6 +532,7 @@ export default function SubmitListing() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 
