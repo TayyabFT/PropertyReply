@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import BrandLogo from "@/components/BrandLogo";
 import { navGroups } from "./navItems";
 import { NavIcon } from "@/components/icons/NavIcons";
 import { useAuth } from "@/lib/auth";
@@ -22,9 +23,11 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <aside className="app-sidebar">
       <div className="app-sidebar-head">
-        <Link href="/app/dashboard" className="logo" onClick={onNavigate}>
-          Property<span>Reply</span>
-        </Link>
+        <BrandLogo
+          href="/app/dashboard"
+          height={40}
+          onClick={onNavigate}
+        />
         <button
           className="sidebar-close"
           aria-label="Close menu"

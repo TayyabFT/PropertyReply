@@ -1,12 +1,12 @@
+import BrandLogo from "@/components/BrandLogo";
+
 export default function Footer() {
   return (
     <footer>
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand">
-            <div className="logo" style={{ fontSize: "1.6rem" }}>
-              Property<span>Reply</span>
-            </div>
+            <BrandLogo asDiv height={64} />
             <p>
               The UK&apos;s leading marketplace for below-market-value property
               deals. Connecting motivated sellers with active investors.

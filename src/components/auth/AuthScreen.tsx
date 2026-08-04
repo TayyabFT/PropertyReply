@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import BrandLogo from "@/components/BrandLogo";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 import { ApiRequestError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -54,9 +55,7 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
     <div className="auth-page">
       <div className="auth-split">
         <div className="auth-brand">
-          <Link href="/" className="logo" style={{ fontSize: "1.6rem" }}>
-            Property<span>Reply</span>
-          </Link>
+          <BrandLogo href="/" height={56} />
           <h2 style={{ marginTop: "28px" }}>
             The UK&apos;s #1 marketplace for{" "}
             <span className="text-gradient">below-market</span> property deals.

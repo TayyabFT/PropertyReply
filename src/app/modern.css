@@ -188,8 +188,19 @@ label {
   font-size: 1.35rem;
   letter-spacing: -0.03em;
   color: #0F172A;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
 }
 .logo span { color: var(--gold); }
+.brand-logo {
+  line-height: 0;
+}
+.brand-logo-img {
+  max-width: min(220px, 55vw);
+  height: auto;
+  object-fit: contain;
+}
 .nav-links {
   gap: 4px;
   padding: 6px;

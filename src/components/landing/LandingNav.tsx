@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import BrandLogo from "@/components/BrandLogo";
 
 const sections: { id: string; label: string }[] = [
   { id: "hero", label: "Home" },
@@ -34,9 +35,7 @@ export default function LandingNav() {
   return (
     <nav className="page-nav">
       <div className="container">
-        <a href="#hero" className="logo" onClick={() => setOpen(false)}>
-          Property<span>Reply</span>
-        </a>
+        <BrandLogo href="#hero" height={44} onClick={() => setOpen(false)} />
 
         <button
           className="nav-toggle"

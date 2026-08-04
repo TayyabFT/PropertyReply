@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BrandLogo from "@/components/BrandLogo";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
 import { authApi, ApiRequestError } from "@/lib/api";
@@ -49,9 +50,7 @@ function ResetPasswordForm() {
     <div className="auth-page">
       <div className="auth-split">
         <div className="auth-brand">
-          <Link href="/" className="logo" style={{ fontSize: "1.6rem" }}>
-            Property<span>Reply</span>
-          </Link>
+          <BrandLogo href="/" height={56} />
           <h2 style={{ marginTop: "28px" }}>
             Choose a <span className="text-gradient">new password</span> for
             your account.
