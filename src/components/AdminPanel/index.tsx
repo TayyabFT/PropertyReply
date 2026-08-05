@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth";
 import {
   adminApi,
@@ -8,6 +8,7 @@ import {
   type AdminStats,
   type AdminSubmission,
   type AdminUser,
+  type AdminAccount,
   type AdminReport,
   type AdminListing,
 } from "@/lib/api";
@@ -16,6 +17,7 @@ const adminNav: { label: string; target: string }[] = [
   { label: "📊 Overview", target: "admin-analytics" },
   { label: "🏠 Listing Queue", target: "admin-queue" },
   { label: "👥 Users", target: "admin-users" },
+  { label: "🛡 Admins", target: "admin-admins" },
   { label: "🏷 Live Listings", target: "admin-listings" },
   { label: "⚑ Reports", target: "admin-reports" },
 ];
@@ -38,6 +40,7 @@ export default function AdminPanel() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [submissions, setSubmissions] = useState<AdminSubmission[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [admins, setAdmins] = useState<AdminAccount[]>([]);
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [listings, setListings] = useState<AdminListing[]>([]);
 
@@ -45,9 +48,16 @@ export default function AdminPanel() {
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [creatingAdmin, setCreatingAdmin] = useState(false);
 
   const [userSearch, setUserSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("");
+  const [adminForm, setAdminForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -75,16 +85,19 @@ export default function AdminPanel() {
       setLoading(true);
       setError(null);
       try {
-        const [statsRes, subsRes, usersRes, reportsRes, listingsRes] = await Promise.all([
-          adminApi.getStats(authToken),
-          adminApi.getSubmissions(authToken, "pending"),
-          adminApi.getUsers(authToken),
-          adminApi.getReports(authToken),
-          adminApi.getListings(authToken),
-        ]);
+        const [statsRes, subsRes, usersRes, adminsRes, reportsRes, listingsRes] =
+          await Promise.all([
+            adminApi.getStats(authToken),
+            adminApi.getSubmissions(authToken, "pending"),
+            adminApi.getUsers(authToken),
+            adminApi.getAdmins(authToken),
+            adminApi.getReports(authToken),
+            adminApi.getListings(authToken),
+          ]);
         setStats(statsRes.data);
         setSubmissions(subsRes.data);
         setUsers(usersRes.data);
+        setAdmins(adminsRes.data);
         setReports(reportsRes.data);
         setListings(listingsRes.data);
       } catch (err) {
@@ -236,6 +249,48 @@ export default function AdminPanel() {
       );
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const handleCreateAdmin = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!token) return;
+
+    const email = adminForm.email.trim();
+    const password = adminForm.password;
+    if (!email || !password) {
+      showToast("Email and password are required.");
+      return;
+    }
+    if (password.length < 8) {
+      showToast("Password must be at least 8 characters.");
+      return;
+    }
+
+    setCreatingAdmin(true);
+    try {
+      const res = await adminApi.createAdmin(token, {
+        email,
+        password,
+        firstName: adminForm.firstName.trim() || undefined,
+        lastName: adminForm.lastName.trim() || undefined,
+      });
+      setAdmins((prev) => {
+        const without = prev.filter((a) => a.id !== res.data.id);
+        return [...without, res.data];
+      });
+      setAdminForm({ firstName: "", lastName: "", email: "", password: "" });
+      showToast(res.message || "Admin account created.");
+      // Refresh member list in case an existing user was promoted
+      await loadUsers(token, userSearch, planFilter);
+    } catch (err) {
+      showToast(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Could not create admin account.",
+      );
+    } finally {
+      setCreatingAdmin(false);
     }
   };
 
@@ -563,6 +618,126 @@ export default function AdminPanel() {
                               </button>
                             </div>
                           </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+
+            <div className="admin-card" id="admin-admins">
+              <div className="admin-card-header">
+                <h3>🛡 Admin Accounts</h3>
+              </div>
+              <div className="admin-card-body">
+                <p className="muted" style={{ marginBottom: "16px" }}>
+                  Create another admin with an email and password. They can sign
+                  in immediately with full admin access.
+                </p>
+
+                <form
+                  onSubmit={handleCreateAdmin}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+                    gap: "12px",
+                    marginBottom: "20px",
+                    alignItems: "end",
+                  }}
+                >
+                  <label style={{ display: "grid", gap: "4px", textAlign: "left" }}>
+                    <span style={{ fontSize: ".75rem", color: "var(--slate)" }}>
+                      First name
+                    </span>
+                    <input
+                      type="text"
+                      value={adminForm.firstName}
+                      onChange={(e) =>
+                        setAdminForm((f) => ({ ...f, firstName: e.target.value }))
+                      }
+                      placeholder="Optional"
+                      style={{ padding: "8px 12px" }}
+                    />
+                  </label>
+                  <label style={{ display: "grid", gap: "4px", textAlign: "left" }}>
+                    <span style={{ fontSize: ".75rem", color: "var(--slate)" }}>
+                      Last name
+                    </span>
+                    <input
+                      type="text"
+                      value={adminForm.lastName}
+                      onChange={(e) =>
+                        setAdminForm((f) => ({ ...f, lastName: e.target.value }))
+                      }
+                      placeholder="Optional"
+                      style={{ padding: "8px 12px" }}
+                    />
+                  </label>
+                  <label style={{ display: "grid", gap: "4px", textAlign: "left" }}>
+                    <span style={{ fontSize: ".75rem", color: "var(--slate)" }}>
+                      Email *
+                    </span>
+                    <input
+                      type="email"
+                      required
+                      value={adminForm.email}
+                      onChange={(e) =>
+                        setAdminForm((f) => ({ ...f, email: e.target.value }))
+                      }
+                      placeholder="admin@example.com"
+                      style={{ padding: "8px 12px" }}
+                    />
+                  </label>
+                  <label style={{ display: "grid", gap: "4px", textAlign: "left" }}>
+                    <span style={{ fontSize: ".75rem", color: "var(--slate)" }}>
+                      Password *
+                    </span>
+                    <input
+                      type="password"
+                      required
+                      minLength={8}
+                      value={adminForm.password}
+                      onChange={(e) =>
+                        setAdminForm((f) => ({ ...f, password: e.target.value }))
+                      }
+                      placeholder="Min. 8 characters"
+                      style={{ padding: "8px 12px" }}
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    className="btn btn-gold btn-sm"
+                    disabled={creatingAdmin}
+                    style={{ height: "40px" }}
+                  >
+                    {creatingAdmin ? "Creating…" : "Add Admin"}
+                  </button>
+                </form>
+
+                {admins.length === 0 ? (
+                  <p className="muted">No admin accounts found.</p>
+                ) : (
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {admins.map((admin) => (
+                        <tr key={admin.id}>
+                          <td>
+                            <strong>{admin.name}</strong>
+                          </td>
+                          <td>{admin.email}</td>
+                          <td>
+                            <span className="tag badge-green">{admin.status}</span>
+                          </td>
+                          <td>{admin.joined}</td>
                         </tr>
                       ))}
                     </tbody>

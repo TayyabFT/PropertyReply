@@ -1007,6 +1007,15 @@ export type AdminUser = {
   statusColor: string;
 };
 
+export type AdminAccount = {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  joined: string;
+  promoted?: boolean;
+};
+
 export type AdminReport = {
   id: string;
   listingId: string | null;
@@ -1034,6 +1043,12 @@ type AdminStatsPayload = { success: boolean; data: AdminStats };
 type AdminSubmissionsPayload = { success: boolean; data: AdminSubmission[] };
 type AdminUsersPayload = { success: boolean; data: AdminUser[] };
 type AdminUserPayload = { success: boolean; message?: string; data: AdminUser };
+type AdminAccountsPayload = { success: boolean; data: AdminAccount[] };
+type AdminAccountPayload = {
+  success: boolean;
+  message?: string;
+  data: AdminAccount;
+};
 type AdminReportsPayload = { success: boolean; data: AdminReport[] };
 type AdminListingsPayload = { success: boolean; data: AdminListing[] };
 type AdminActionPayload = {
@@ -1103,6 +1118,30 @@ export const adminApi = {
     return request<AdminActionPayload>(
       `/admin/users/${id}`,
       { method: "DELETE" },
+      token,
+    );
+  },
+
+  getAdmins(token: string) {
+    return request<AdminAccountsPayload>(
+      "/admin/admins",
+      { method: "GET" },
+      token,
+    );
+  },
+
+  createAdmin(
+    token: string,
+    body: {
+      email: string;
+      password: string;
+      firstName?: string;
+      lastName?: string;
+    },
+  ) {
+    return request<AdminAccountPayload>(
+      "/admin/admins",
+      { method: "POST", body: JSON.stringify(body) },
       token,
     );
   },
