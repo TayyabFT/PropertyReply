@@ -12,6 +12,8 @@ export type ApiUser = {
   trialEndsAt?: string | null;
   /** True while free trial is still active (not a paid sub) */
   onTrial?: boolean;
+  /** True when the user may still opt in to a one-time free trial */
+  canStartTrial?: boolean;
   role: "user" | "admin";
   status: "active" | "suspended" | "banned";
   kycStatus?:
@@ -760,6 +762,14 @@ export const billingApi = {
       { method: "POST" },
       token,
     );
+  },
+
+  startTrial(token: string) {
+    return request<{
+      success: boolean;
+      message?: string;
+      data: { user: ApiUser };
+    }>("/billing/start-trial", { method: "POST" }, token);
   },
 };
 

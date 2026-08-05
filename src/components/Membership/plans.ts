@@ -1,9 +1,32 @@
 import type { Plan } from "./PlanCard";
 
+export const freeTrialPlan: Plan = {
+  id: "trial",
+  cardClass: "plan-card featured",
+  badge: "Try Free",
+  tagClass: "tag badge-green",
+  tagLabel: "Free Trial",
+  price: "£0",
+  pricePeriod: "/7 days",
+  priceNote: "No card required — start browsing today",
+  desc: "Full Premium access for 7 days. Browse deals and prepare listing drafts.",
+  features: [
+    { included: true, text: "7 days of Premium browsing" },
+    { included: true, text: "Full contact details revealed" },
+    { included: true, text: "Complete deal analysis (Flip + BTL)" },
+    { included: true, text: "Prepare listing drafts" },
+    { included: false, text: "Publish listings (subscribe required)" },
+    { included: true, text: "Upgrade to Premium anytime" },
+  ],
+  buttonClass: "btn btn-gold",
+  buttonStyle: { width: "100%" },
+  buttonLabel: "Start 7 Days Free Trial →",
+};
+
 export const plans: Plan[] = [
   {
     id: "premium",
-    cardClass: "plan-card featured",
+    cardClass: "plan-card",
     badge: "Most Popular",
     tagClass: "tag badge-green",
     tagLabel: "Premium",

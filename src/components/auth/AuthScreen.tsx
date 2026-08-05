@@ -16,7 +16,7 @@ const features: { num: string; text: string }[] = [
 
 export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
-  const { login, register, loading } = useAuth();
+  const { login, register, loading, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -37,12 +37,22 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
           email,
           password,
         });
-        // New accounts start a 7-day free trial — go straight into the app
-        router.push("/app/dashboard");
+        // Choose free trial or paid plan after signup
+        router.push("/app/membership");
         return;
       }
-      await login(email, password);
-      router.push("/app/dashboard");
+      const loggedInUser = await login(email, password);
+      // Returning members with access go to the app; others choose a plan/trial
+      const nextUser = loggedInUser ?? user;
+      if (
+        nextUser?.role === "admin" ||
+        nextUser?.onTrial ||
+        nextUser?.subscriptionStatus === "active"
+      ) {
+        router.push("/app/dashboard");
+      } else {
+        router.push("/app/membership");
+      }
     } catch (err) {
       const message =
         err instanceof ApiRequestError

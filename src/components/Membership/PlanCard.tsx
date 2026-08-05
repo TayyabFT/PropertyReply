@@ -12,6 +12,8 @@ export type Plan = {
   tagClass: string;
   tagLabel: string;
   price: string;
+  /** Defaults to "/mo" — use empty string to hide the period suffix */
+  pricePeriod?: string;
   priceNote?: string;
   desc: string;
   features: PlanFeature[];
@@ -53,7 +55,9 @@ export default function PlanCard({
       <div className={plan.tagClass}>{plan.tagLabel}</div>
       <div className={`plan-price${plan.comingSoon ? " plan-blurred" : ""}`}>
         {plan.price}
-        <span>/mo</span>
+        {plan.pricePeriod !== "" && (
+          <span>{plan.pricePeriod ?? "/mo"}</span>
+        )}
       </div>
       {plan.priceNote && (
         <p

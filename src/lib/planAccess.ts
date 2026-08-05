@@ -32,3 +32,18 @@ export function userHasPaidSubscription(
   if (user.role === "admin") return true;
   return user.subscriptionStatus === "active" && Boolean(user.plan) && !user.onTrial;
 }
+
+/** One-time free trial still available */
+export function userCanStartTrial(user: ApiUser | null | undefined): boolean {
+  if (!user || user.role === "admin") return false;
+  if (typeof user.canStartTrial === "boolean") return user.canStartTrial;
+  if (user.onTrial || userHasPaidSubscription(user)) return false;
+  return !user.trialEndsAt;
+}
+
+/** Trial was used and has ended (logged-in users only) */
+export function userTrialHasEnded(user: ApiUser | null | undefined): boolean {
+  if (!user || user.role === "admin") return false;
+  if (user.onTrial || userHasPlanAccess(user)) return false;
+  return Boolean(user.trialEndsAt);
+}

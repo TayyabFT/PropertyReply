@@ -17,7 +17,7 @@ type AuthContextValue = {
   token: string | null;
   ready: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   register: (input: {
     firstName: string;
     lastName: string;
@@ -101,11 +101,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(
-    async (email: string, password: string) => {
+    async (email: string, password: string): Promise<User> => {
       setLoading(true);
       try {
         const response = await authApi.login({ email, password });
         applyAuth(response.data.user, response.data.token);
+        return response.data.user;
       } finally {
         setLoading(false);
       }

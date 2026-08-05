@@ -1,11 +1,16 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PlanCard from "./PlanCard";
-import { plans } from "./plans";
+import { freeTrialPlan, plans } from "./plans";
 import { useAuth } from "@/lib/auth";
 import { authApi, billingApi, ApiRequestError } from "@/lib/api";
+import {
+  userCanStartTrial,
+  userHasPaidSubscription,
+  userTrialHasEnded,
+} from "@/lib/planAccess";
 
 function MembershipContent() {
   const router = useRouter();
@@ -24,6 +29,20 @@ function MembershipContent() {
 
   const checkoutParam = searchParams.get("checkout");
   const sessionId = searchParams.get("session_id");
+
+  const canStartTrial = userCanStartTrial(user);
+  const trialEnded = userTrialHasEnded(user);
+  const onTrial = Boolean(user?.onTrial);
+  const hasPaid = userHasPaidSubscription(user);
+
+  const displayPlans = useMemo(() => {
+    // Show free-trial card for logged-out visitors (CTA → register)
+    // and for logged-in users who are still eligible.
+    if (!user || canStartTrial) {
+      return [freeTrialPlan, ...plans];
+    }
+    return plans;
+  }, [user, canStartTrial]);
 
   useEffect(() => {
     if (!checkoutParam || !token) return;
@@ -58,15 +77,9 @@ function MembershipContent() {
       };
 
       const run = async () => {
-        // Reconcile directly from the Stripe session — works even if the
-        // webhook hasn't been delivered yet (e.g. no local webhook forwarding).
         await confirmViaSession();
         if (cancelled) return;
 
-        // Always refresh from /auth/me — this is what actually syncs the
-        // logged-in user object (and its subscriptionStatus) held in AuthContext.
-        // Skipping this left the app thinking the user was still unsubscribed
-        // even after a successful checkout, bouncing them right back here.
         const finalPlan = await refreshUser();
         if (cancelled) return;
 
@@ -93,14 +106,44 @@ function MembershipContent() {
   }, [checkoutParam, sessionId, token]);
 
   const handleSelect = async (planId: string) => {
-    if (!token || planId !== "premium") return;
+    if (planId === "trial") {
+      if (!token) {
+        router.push("/register");
+        return;
+      }
+      setError("");
+      setCheckoutLoadingPlan("trial");
+      try {
+        const response = await billingApi.startTrial(token);
+        updateUser(response.data.user);
+        setBanner({
+          type: "success",
+          text: "Your 7-day free Premium trial has started. Enjoy browsing deals!",
+        });
+        router.replace("/app/dashboard");
+      } catch (err) {
+        setError(
+          err instanceof ApiRequestError
+            ? err.message
+            : "Unable to start your free trial. Please try again.",
+        );
+        setCheckoutLoadingPlan(null);
+      }
+      return;
+    }
 
-    const planName = "Premium";
+    if (planId !== "premium") return;
+
+    if (!token) {
+      router.push("/register");
+      return;
+    }
+
     setError("");
     setCheckoutLoadingPlan(planId);
 
     try {
-      const response = await billingApi.checkout(token, planName);
+      const response = await billingApi.checkout(token, "Premium");
       window.location.href = response.data.url;
     } catch (err) {
       setError(
@@ -131,7 +174,6 @@ function MembershipContent() {
   };
 
   const currentPlanId = (user?.plan || "").toLowerCase();
-  const onTrial = Boolean(user?.onTrial);
   const trialEndsLabel = user?.trialEndsAt
     ? new Date(user.trialEndsAt).toLocaleDateString("en-GB", {
         day: "numeric",
@@ -152,39 +194,38 @@ function MembershipContent() {
           </div>
           <h2>Choose Your Access Level</h2>
           <p className="muted">
-            New members get a 7-day free Premium trial to browse deals and prepare
-            listings. Subscribe to publish and keep access — each published
-            listing has a £10 fee.
+            Start with a 7-day free Premium trial to browse deals and prepare
+            listings, or subscribe now. Publishing requires a paid membership —
+            each listing has a £10 fee.
           </p>
         </div>
 
-        {onTrial && trialEndsLabel && (
+        {user && onTrial && trialEndsLabel && (
           <div
             className="alert alert-info"
             style={{ margin: "16px auto", maxWidth: "520px" }}
           >
             <span>i</span>
             <span>
-              You&apos;re on a free Premium trial until <strong>{trialEndsLabel}</strong>.
-              Subscribe before it ends to keep browsing deals.
+              You&apos;re on a free Premium trial until{" "}
+              <strong>{trialEndsLabel}</strong>. Subscribe before it ends to keep
+              browsing deals — you can upgrade anytime below.
             </span>
           </div>
         )}
 
-        {!onTrial &&
-          user?.role !== "admin" &&
-          user?.subscriptionStatus !== "active" && (
-            <div
-              className="alert alert-error"
-              style={{ margin: "16px auto", maxWidth: "520px" }}
-            >
-              <span>!</span>
-              <span>
-                Your free trial has ended. Choose a plan below to continue using
-                PropertyReply.
-              </span>
-            </div>
-          )}
+        {user && trialEnded && (
+          <div
+            className="alert alert-error"
+            style={{ margin: "16px auto", maxWidth: "520px" }}
+          >
+            <span>!</span>
+            <span>
+              Your free trial has ended. Choose a plan below to continue using
+              PropertyReply.
+            </span>
+          </div>
+        )}
 
         {banner && (
           <div
@@ -209,22 +250,38 @@ function MembershipContent() {
         )}
 
         <div className="membership-grid" style={{ marginTop: "8px" }}>
-          {plans.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              plan={plan}
-              isCurrent={plan.id === paidCurrentPlanId}
-              loading={checkoutLoadingPlan === plan.id}
-              onSelect={
-                plan.comingSoon || plan.id !== "premium"
-                  ? undefined
-                  : () => handleSelect(plan.id)
-              }
-            />
-          ))}
+          {displayPlans.map((plan) => {
+            const isSelectable =
+              !plan.comingSoon &&
+              (plan.id === "trial" || plan.id === "premium");
+
+            return (
+              <PlanCard
+                key={plan.id}
+                plan={
+                  plan.id === "premium" && (canStartTrial || !user)
+                    ? { ...plan, cardClass: "plan-card" }
+                    : plan.id === "trial"
+                      ? plan
+                      : plan.id === "premium" && onTrial
+                        ? {
+                            ...plan,
+                            cardClass: "plan-card featured",
+                            buttonLabel: "Upgrade to Premium →",
+                          }
+                        : plan
+                }
+                isCurrent={plan.id === paidCurrentPlanId}
+                loading={checkoutLoadingPlan === plan.id}
+                onSelect={
+                  isSelectable ? () => handleSelect(plan.id) : undefined
+                }
+              />
+            );
+          })}
         </div>
 
-        {Boolean(paidCurrentPlanId) && (
+        {Boolean(paidCurrentPlanId) && hasPaid && (
           <button
             type="button"
             className="btn btn-outline"
@@ -243,7 +300,7 @@ function MembershipContent() {
             color: "var(--slate)",
           }}
         >
-          7-day free trial for new accounts. Publish listings after you
+          One free 7-day trial per account. Publish listings after you
           subscribe — £10 listing fee per property. Plans billed monthly;
           cancel anytime.
         </p>
