@@ -21,6 +21,7 @@ function MembershipContent() {
     null,
   );
   const [portalLoading, setPortalLoading] = useState(false);
+  const [showAllPlans, setShowAllPlans] = useState(false);
   const [error, setError] = useState("");
   const [banner, setBanner] = useState<{
     type: "success" | "info";
@@ -34,15 +35,20 @@ function MembershipContent() {
   const trialEnded = userTrialHasEnded(user);
   const onTrial = Boolean(user?.onTrial);
   const hasPaid = userHasPaidSubscription(user);
+  const showTrialCard = !user || canStartTrial;
 
-  const displayPlans = useMemo(() => {
-    // Show free-trial card for logged-out visitors (CTA → register)
-    // and for logged-in users who are still eligible.
-    if (!user || canStartTrial) {
-      return [freeTrialPlan, ...plans];
-    }
+  const allPlans = useMemo(() => {
+    if (showTrialCard) return [freeTrialPlan, ...plans];
     return plans;
-  }, [user, canStartTrial]);
+  }, [showTrialCard]);
+
+  // Default: 3 cards. Expand with "See all plans".
+  const displayPlans = useMemo(() => {
+    if (showAllPlans) return allPlans;
+    return allPlans.slice(0, 3);
+  }, [allPlans, showAllPlans]);
+
+  const hasMorePlans = allPlans.length > 3;
 
   useEffect(() => {
     if (!checkoutParam || !token) return;
@@ -207,7 +213,7 @@ function MembershipContent() {
           >
             <span>i</span>
             <span>
-              You&apos;re on a free Premium trial until{" "}
+              You&apos;re on a free trial until{" "}
               <strong>{trialEndsLabel}</strong>. Subscribe before it ends to keep
               browsing deals — you can upgrade anytime below.
             </span>
@@ -259,7 +265,7 @@ function MembershipContent() {
               <PlanCard
                 key={plan.id}
                 plan={
-                  plan.id === "premium" && (canStartTrial || !user)
+                  plan.id === "premium" && showTrialCard
                     ? { ...plan, cardClass: "plan-card" }
                     : plan.id === "trial"
                       ? plan
@@ -281,11 +287,22 @@ function MembershipContent() {
           })}
         </div>
 
-        {Boolean(paidCurrentPlanId) && hasPaid && (
+        {hasMorePlans && (
           <button
             type="button"
             className="btn btn-outline"
             style={{ marginTop: "20px" }}
+            onClick={() => setShowAllPlans((v) => !v)}
+          >
+            {showAllPlans ? "Show fewer plans" : "See all plans"}
+          </button>
+        )}
+
+        {Boolean(paidCurrentPlanId) && hasPaid && (
+          <button
+            type="button"
+            className="btn btn-outline"
+            style={{ marginTop: "20px", marginLeft: hasMorePlans ? "10px" : 0 }}
             onClick={handleManageBilling}
             disabled={portalLoading}
           >

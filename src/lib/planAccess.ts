@@ -3,6 +3,18 @@ import type { ApiUser } from "./api";
 export const PUBLISH_REQUIRES_MEMBERSHIP_MESSAGE =
   "Your free trial has ended. To publish your property and reach buyers, choose a membership.";
 
+/** Short label for sidebar / profile (e.g. "Free Trial", "Premium Member") */
+export function userPlanLabel(user: ApiUser | null | undefined): string {
+  if (!user) return "No Plan";
+  if (user.role === "admin") return "Admin";
+  if (user.onTrial) return "Free Trial";
+  if (user.plan && user.subscriptionStatus === "active") {
+    return `${user.plan} Member`;
+  }
+  if (user.plan) return `${user.plan} Member`;
+  return "No Plan";
+}
+
 /** Whether the user can use plan-gated app features right now */
 export function userHasPlanAccess(user: ApiUser | null | undefined): boolean {
   if (!user) return false;

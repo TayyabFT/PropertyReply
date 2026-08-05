@@ -194,6 +194,7 @@ export type OverviewMembership = {
   price: string;
   badgeLabel: string;
   badgeClass: string;
+  onTrial?: boolean;
 };
 
 export type OverviewSubmission = {

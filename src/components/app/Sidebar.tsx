@@ -6,6 +6,7 @@ import BrandLogo from "@/components/BrandLogo";
 import { navGroups } from "./navItems";
 import { NavIcon } from "@/components/icons/NavIcons";
 import { useAuth } from "@/lib/auth";
+import { userPlanLabel } from "@/lib/planAccess";
 
 function iconKey(href: string) {
   return href.replace("/app/", "");
@@ -70,7 +71,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <div className="avatar">{user?.initials ?? "PR"}</div>
           <div>
             <div className="u-name">{user?.name ?? "Member"}</div>
-            <div className="u-plan">{user?.plan ? `${user.plan} Member` : "No Plan"}</div>
+            <div className="u-plan">{userPlanLabel(user)}</div>
           </div>
         </Link>
       </div>

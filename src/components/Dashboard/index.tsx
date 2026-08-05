@@ -173,7 +173,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p style={{ fontSize: ".75rem", color: "var(--slate)" }}>
-                  Renews
+                  {membership.onTrial ? "Ends" : "Renews"}
                 </p>
                 <p style={{ fontWeight: 600 }}>{membership.renewsAt}</p>
               </div>
@@ -186,21 +186,35 @@ export default function Dashboard() {
             </div>
             <div className="divider"></div>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              {membership.plan !== "VIP" && (
+              {membership.onTrial ? (
+                <Link href="/app/membership" className="btn btn-gold btn-sm">
+                  Upgrade to Premium
+                </Link>
+              ) : membership.plan !== "VIP" && membership.plan !== "None" ? (
                 <Link href="/app/membership" className="btn btn-gold btn-sm">
                   Upgrade to VIP
                 </Link>
+              ) : membership.plan === "None" ? (
+                <Link href="/app/membership" className="btn btn-gold btn-sm">
+                  Choose a Plan
+                </Link>
+              ) : null}
+              {!membership.onTrial && membership.plan !== "None" && (
+                <>
+                  <button className="btn btn-outline btn-sm">
+                    Manage Billing
+                  </button>
+                  <button
+                    className="btn btn-outline btn-sm"
+                    style={{
+                      color: "var(--red)",
+                      borderColor: "rgba(232,64,64,.3)",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </>
               )}
-              <button className="btn btn-outline btn-sm">Manage Billing</button>
-              <button
-                className="btn btn-outline btn-sm"
-                style={{
-                  color: "var(--red)",
-                  borderColor: "rgba(232,64,64,.3)",
-                }}
-              >
-                Cancel
-              </button>
             </div>
           </div>
 

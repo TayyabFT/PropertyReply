@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { authApi, ApiRequestError } from "@/lib/api";
+import { userPlanLabel } from "@/lib/planAccess";
 
 const ALL_NOTIFICATION_PREFS = [
   "New deal alerts (instant)",
@@ -203,8 +204,16 @@ export default function Profile() {
                 marginTop: "6px",
               }}
             >
-              <span className={user.plan ? "tag badge-green" : "tag badge-blue"}>
-                {user.plan ? `${user.plan} Member` : "No Plan"}
+              <span
+                className={
+                  user.onTrial
+                    ? "tag badge-blue"
+                    : user.plan
+                      ? "tag badge-green"
+                      : "tag badge-blue"
+                }
+              >
+                {userPlanLabel(user)}
               </span>
               <span className={kyc.className}>{kyc.label}</span>
               {user.investorType && (
