@@ -12,7 +12,7 @@ export default function Hero() {
               <span className="text-gradient">Below Market</span> Value
             </h1>
             <p className="hero-desc">
-              Access thousands of verified below-market-value properties across
+              Access verified below-market-value properties across
               the UK. From flips to HMOs, every deal analysed and ready to act
               on.
             </p>

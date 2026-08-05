@@ -6,7 +6,7 @@ import { AuthProvider } from "@/lib/auth";
 export const metadata: Metadata = {
   title: "Property Reply — BMV Marketplace",
   description:
-    "Access thousands of verified below-market-value properties across the UK. From flips to HMOs, every deal analysed and ready to act on.",
+    "Access verified below-market-value properties across the UK. From flips to HMOs, every deal analysed and ready to act on.",
   icons: {
     icon: [
       { url: "/assets/favicon.png", type: "image/png", sizes: "48x48" },

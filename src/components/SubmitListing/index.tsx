@@ -436,7 +436,7 @@ export default function SubmitListing() {
         <div className="tag mb-8">Submit a Deal</div>
         <h2 className="mb-8">List a BMV Property</h2>
         <p className="muted mb-32">
-          Share below-market deals with thousands of active investors. All
+          Share below-market deals with active investors. All
           submissions are reviewed before going live.
         </p>
 
