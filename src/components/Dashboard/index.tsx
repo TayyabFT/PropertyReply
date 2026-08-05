@@ -121,8 +121,48 @@ export default function Dashboard() {
     );
   }
 
-  const { stats, membership, submissions, savedProperties, savedCount } =
-    overview;
+  const { stats, submissions, savedProperties, savedCount } = overview;
+
+  // Prefer live auth trial state so Membership Status never shows paid Premium
+  // for complimentary / free-trial accounts (even if overview payload is stale).
+  const membership = (() => {
+    const fromApi = overview.membership;
+    if (user?.hasPaidPlan) return fromApi;
+
+    const trialEndsAt = user?.trialEndsAt ? new Date(user.trialEndsAt) : null;
+    const trialStillValid = Boolean(trialEndsAt && trialEndsAt > new Date());
+    const trialActive =
+      Boolean(user?.onTrial) ||
+      Boolean(fromApi.onTrial) ||
+      user?.subscriptionStatus === "trialing" ||
+      (Boolean(user?.plan) && trialStillValid) ||
+      // Unpaid account that still has a plan — treat as free trial, never paid Premium
+      (Boolean(user?.plan) && user?.hasPaidPlan === false);
+
+    if (!trialActive) return fromApi;
+
+    const endsLabel = trialEndsAt
+      ? trialEndsAt.toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+      : fromApi.onTrial
+        ? fromApi.renewsAt
+        : "—";
+
+    return {
+      ...fromApi,
+      plan: "Free Trial",
+      status: "Trialing",
+      billingLabel: "Free Trial",
+      renewsAt: endsLabel,
+      price: "£0.00 — 7-day free trial",
+      badgeLabel: "Free Trial · Active",
+      badgeClass: "tag badge-blue",
+      onTrial: true,
+    };
+  })();
 
   return (
     <section className="section section-dark" id="dashboard">

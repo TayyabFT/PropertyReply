@@ -7,11 +7,23 @@ export const PUBLISH_REQUIRES_MEMBERSHIP_MESSAGE =
 export function userPlanLabel(user: ApiUser | null | undefined): string {
   if (!user) return "No Plan";
   if (user.role === "admin") return "Admin";
-  if (user.onTrial) return "Free Trial";
-  if (user.plan && user.subscriptionStatus === "active") {
+  if (user.onTrial || (user.plan && !user.hasPaidPlan && user.subscriptionStatus === "trialing")) {
+    return "Free Trial";
+  }
+  // Complimentary Premium without Stripe must not look like a paid membership
+  if (user.plan && !user.hasPaidPlan) {
+    if (
+      user.trialEndsAt &&
+      new Date(user.trialEndsAt) > new Date()
+    ) {
+      return "Free Trial";
+    }
+    if (user.subscriptionStatus === "trialing") return "Free Trial";
+  }
+  if (user.hasPaidPlan && user.plan) return `${user.plan} Member`;
+  if (user.plan && user.subscriptionStatus === "active" && user.hasPaidPlan) {
     return `${user.plan} Member`;
   }
-  if (user.plan) return `${user.plan} Member`;
   return "No Plan";
 }
 

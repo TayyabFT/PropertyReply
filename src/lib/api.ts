@@ -12,6 +12,8 @@ export type ApiUser = {
   trialEndsAt?: string | null;
   /** True while free trial is still active (not a paid sub) */
   onTrial?: boolean;
+  /** True only when Stripe subscription is active (not free trial) */
+  hasPaidPlan?: boolean;
   /** True when the user may still opt in to a one-time free trial */
   canStartTrial?: boolean;
   role: "user" | "admin";
