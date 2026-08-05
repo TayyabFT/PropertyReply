@@ -131,6 +131,17 @@ function MembershipContent() {
   };
 
   const currentPlanId = (user?.plan || "").toLowerCase();
+  const onTrial = Boolean(user?.onTrial);
+  const trialEndsLabel = user?.trialEndsAt
+    ? new Date(user.trialEndsAt).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+  // Trial users should still be able to buy Premium (don't treat as "Current Plan")
+  const paidCurrentPlanId =
+    onTrial || user?.subscriptionStatus === "trialing" ? "" : currentPlanId;
 
   return (
     <section className="section section-alt" id="membership">
@@ -141,10 +152,38 @@ function MembershipContent() {
           </div>
           <h2>Choose Your Access Level</h2>
           <p className="muted">
-            Upgrade to unlock full deal data, contact details, and advanced
-            analysis.
+            New members get a 7-day free Premium trial. After that, subscribe to
+            keep access. Uploading a property still requires a £10 listing fee.
           </p>
         </div>
+
+        {onTrial && trialEndsLabel && (
+          <div
+            className="alert alert-info"
+            style={{ margin: "16px auto", maxWidth: "520px" }}
+          >
+            <span>i</span>
+            <span>
+              You&apos;re on a free Premium trial until <strong>{trialEndsLabel}</strong>.
+              Subscribe before it ends to keep browsing deals.
+            </span>
+          </div>
+        )}
+
+        {!onTrial &&
+          user?.role !== "admin" &&
+          user?.subscriptionStatus !== "active" && (
+            <div
+              className="alert alert-error"
+              style={{ margin: "16px auto", maxWidth: "520px" }}
+            >
+              <span>!</span>
+              <span>
+                Your free trial has ended. Choose a plan below to continue using
+                PropertyReply.
+              </span>
+            </div>
+          )}
 
         {banner && (
           <div
@@ -173,7 +212,7 @@ function MembershipContent() {
             <PlanCard
               key={plan.id}
               plan={plan}
-              isCurrent={plan.id === currentPlanId}
+              isCurrent={plan.id === paidCurrentPlanId}
               loading={checkoutLoadingPlan === plan.id}
               onSelect={
                 plan.comingSoon || plan.id !== "premium"
@@ -184,7 +223,7 @@ function MembershipContent() {
           ))}
         </div>
 
-        {Boolean(currentPlanId) && (
+        {Boolean(paidCurrentPlanId) && (
           <button
             type="button"
             className="btn btn-outline"
@@ -203,8 +242,8 @@ function MembershipContent() {
             color: "var(--slate)",
           }}
         >
-          All plans billed monthly. Cancel anytime. Membership renewal reminders
-          sent 7 days before each billing date.
+          7-day free trial for new accounts. Plans billed monthly after that —
+          cancel anytime. Property uploads always require a £10 listing fee.
         </p>
       </div>
     </section>

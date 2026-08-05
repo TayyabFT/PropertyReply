@@ -7,7 +7,11 @@ export type ApiUser = {
   name: string;
   email: string;
   plan: string | null;
-  subscriptionStatus?: "none" | "active" | "past_due" | "canceled";
+  subscriptionStatus?: "none" | "trialing" | "active" | "past_due" | "canceled";
+  /** ISO date when complimentary trial ends */
+  trialEndsAt?: string | null;
+  /** True while free trial is still active (not a paid sub) */
+  onTrial?: boolean;
   role: "user" | "admin";
   status: "active" | "suspended" | "banned";
   kycStatus?:
@@ -24,6 +28,7 @@ export type ApiUser = {
   notificationPrefs?: string[];
   createdAt?: string;
 };
+
 
 type AuthPayload = {
   success: boolean;

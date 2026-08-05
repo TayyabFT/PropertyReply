@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import { useAuth } from "@/lib/auth";
+import { userHasPlanAccess } from "@/lib/planAccess";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, ready } = useAuth();
@@ -16,15 +17,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (ready && !user) router.replace("/login");
   }, [ready, user, router]);
 
-  // Users without an active subscription are locked out of the app until
-  // they subscribe — the membership page itself must stay reachable.
-  // Admins bypass this, matching the backend's requireActivePlan middleware.
+  // Users without trial or paid subscription are locked to membership.
+  // Admins and users on a live 7-day free trial can use the app.
   useEffect(() => {
     if (
       ready &&
       user &&
       user.role !== "admin" &&
-      user.subscriptionStatus !== "active" &&
+      !userHasPlanAccess(user) &&
       !pathname.startsWith("/app/membership")
     ) {
       router.replace("/app/membership");

@@ -37,7 +37,8 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
           email,
           password,
         });
-        router.push("/app/membership");
+        // New accounts start a 7-day free trial — go straight into the app
+        router.push("/app/dashboard");
         return;
       }
       await login(email, password);
