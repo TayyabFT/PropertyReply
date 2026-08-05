@@ -8,17 +8,55 @@ import GoogleIcon from "@/components/icons/GoogleIcon";
 import { ApiRequestError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
-const features: { num: string; text: string }[] = [
-  { num: "01", text: "2,400+ verified below-market deals across the UK" },
-  { num: "02", text: "Full flip & buy-to-let analysis on every listing" },
-  { num: "03", text: "Identity-verified sellers and GDPR-compliant data" },
-];
+function PasswordField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  minLength,
+  autoComplete,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  minLength?: number;
+  autoComplete?: string;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className="form-group">
+      <label>{label}</label>
+      <div className="password-field">
+        <input
+          type={visible ? "text" : "password"}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          minLength={minLength}
+          autoComplete={autoComplete}
+          required
+        />
+        <button
+          type="button"
+          className="password-toggle"
+          onClick={() => setVisible((v) => !v)}
+          aria-label={visible ? "Hide password" : "Show password"}
+        >
+          {visible ? "Hide" : "View"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const { login, register, loading, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
@@ -31,6 +69,14 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
 
     try {
       if (isRegister) {
+        if (password.length < 8) {
+          setError("Password must be at least 8 characters.");
+          return;
+        }
+        if (password !== confirmPassword) {
+          setError("Passwords do not match.");
+          return;
+        }
         await register({
           firstName,
           lastName,
@@ -128,19 +174,25 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
                 required
               />
             </div>
-            <div className="form-group">
-              <label>Password</label>
-              <input
-                type="password"
-                placeholder={
-                  isRegister ? "Minimum 8 characters" : "••••••••"
-                }
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                minLength={isRegister ? 8 : undefined}
-                required
+            <PasswordField
+              label="Password"
+              value={password}
+              onChange={setPassword}
+              placeholder={isRegister ? "Minimum 8 characters" : "••••••••"}
+              minLength={isRegister ? 8 : undefined}
+              autoComplete={isRegister ? "new-password" : "current-password"}
+            />
+
+            {isRegister && (
+              <PasswordField
+                label="Confirm Password"
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                placeholder="Re-enter your password"
+                minLength={8}
+                autoComplete="new-password"
               />
-            </div>
+            )}
 
             {!isRegister && (
               <div

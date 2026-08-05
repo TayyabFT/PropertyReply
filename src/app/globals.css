@@ -105,6 +105,29 @@
   label { font-size: .83rem; font-weight: 500; color: #64748B; margin-bottom: 6px; display: block; }
 
   .form-group { margin-bottom: 18px; }
+  .password-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .password-field input {
+    width: 100%;
+    padding-right: 72px;
+  }
+  .password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: var(--slate);
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 6px;
+  }
+  .password-toggle:hover { color: var(--ink); }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
   .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; }
