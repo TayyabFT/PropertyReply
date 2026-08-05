@@ -819,6 +819,8 @@ export type Submission = {
   status: string;
   statusLabel: string;
   paymentStatus: "pending" | "paid";
+  listingFeeGBP?: number;
+  isTrialListing?: boolean;
   submittedAt: string;
   updatedAt: string;
 };
@@ -844,7 +846,12 @@ type SubmissionPayload = {
 type SubmitCheckoutPayload = {
   success: boolean;
   message?: string;
-  data: { submissionId: string; checkoutUrl: string };
+  data: {
+    submissionId: string;
+    checkoutUrl: string | null;
+    freeTrialListing?: boolean;
+    message?: string;
+  };
 };
 
 type SubmissionsListPayload = {

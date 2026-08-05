@@ -287,6 +287,10 @@ export default function SubmitListing() {
     }
   };
 
+  const freeTrialListingAvailable =
+    Boolean(user?.onTrial) &&
+    !submissions.some((item) => item.isTrialListing);
+
   const handleSubmit = async () => {
     if (!token) return;
     resetMessages();
@@ -294,6 +298,19 @@ export default function SubmitListing() {
 
     try {
       const res = await submitApi.submit(token, buildPayload(form));
+      if (res.data.freeTrialListing || !res.data.checkoutUrl) {
+        setSuccess(
+          res.message ||
+            res.data.message ||
+            "Submitted with your free trial listing credit. It will be removed if you don't subscribe before your trial ends.",
+        );
+        setForm(emptyForm);
+        setDraftId(null);
+        await refreshDrafts(token);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        setSubmitting(false);
+        return;
+      }
       window.location.href = res.data.checkoutUrl;
     } catch (err) {
       const message =
@@ -801,13 +818,28 @@ export default function SubmitListing() {
               </div>
             </div>
 
-            <div className="alert alert-warn">
-              <span>⚠️</span>
+            <div
+              className={
+                freeTrialListingAvailable ? "alert alert-info" : "alert alert-warn"
+              }
+            >
+              <span>{freeTrialListingAvailable ? "i" : "⚠️"}</span>
               <div>
-                A £10 listing fee applies per submission, payable by card on
-                the next step. Listings are reviewed within 24–48 hours after
-                payment. Inaccurate, misleading, or spam listings will be
-                removed and may result in account suspension.
+                {freeTrialListingAvailable ? (
+                  <>
+                    You have <strong>1 free listing</strong> included with your
+                    7-day trial. No £10 fee for this submission. If you don&apos;t
+                    subscribe before the trial ends, this listing will be removed.
+                    Extra listings still cost £10 each.
+                  </>
+                ) : (
+                  <>
+                    A £10 listing fee applies per submission, payable by card on
+                    the next step. Listings are reviewed within 24–48 hours after
+                    payment. Inaccurate, misleading, or spam listings will be
+                    removed and may result in account suspension.
+                  </>
+                )}
               </div>
             </div>
 
@@ -834,7 +866,13 @@ export default function SubmitListing() {
                   onClick={handleSubmit}
                   disabled={submitting || savingDraft}
                 >
-                  {submitting ? "Redirecting to payment…" : "Pay £10 & Submit →"}
+                  {submitting
+                    ? freeTrialListingAvailable
+                      ? "Submitting…"
+                      : "Redirecting to payment…"
+                    : freeTrialListingAvailable
+                      ? "Submit free trial listing →"
+                      : "Pay £10 & Submit →"}
                 </button>
               </div>
             </div>
