@@ -152,8 +152,9 @@ function MembershipContent() {
           </div>
           <h2>Choose Your Access Level</h2>
           <p className="muted">
-            New members get a 7-day free Premium trial plus 1 free listing.
-            After the trial, subscribe to keep access. Extra listings cost £10.
+            New members get a 7-day free Premium trial to browse deals and prepare
+            listings. Subscribe to publish and keep access — each published
+            listing has a £10 fee.
           </p>
         </div>
 
@@ -242,8 +243,9 @@ function MembershipContent() {
             color: "var(--slate)",
           }}
         >
-          7-day free trial for new accounts. Plans billed monthly after that —
-          cancel anytime. Property uploads always require a £10 listing fee.
+          7-day free trial for new accounts. Publish listings after you
+          subscribe — £10 listing fee per property. Plans billed monthly;
+          cancel anytime.
         </p>
       </div>
     </section>

@@ -17,16 +17,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (ready && !user) router.replace("/login");
   }, [ready, user, router]);
 
-  // Users without trial or paid subscription are locked to membership.
-  // Admins and users on a live 7-day free trial can use the app.
+  // Users without trial or paid subscription are locked to membership,
+  // except submit/KYC so they can finish a draft and see the publish prompt.
   useEffect(() => {
-    if (
-      ready &&
-      user &&
-      user.role !== "admin" &&
-      !userHasPlanAccess(user) &&
-      !pathname.startsWith("/app/membership")
-    ) {
+    if (!ready || !user || user.role === "admin") return;
+    if (userHasPlanAccess(user)) return;
+
+    const allowedWithoutPlan =
+      pathname.startsWith("/app/membership") ||
+      pathname.startsWith("/app/submit") ||
+      pathname.startsWith("/app/kyc") ||
+      pathname.startsWith("/app/profile");
+
+    if (!allowedWithoutPlan) {
       router.replace("/app/membership");
     }
   }, [ready, user, pathname, router]);

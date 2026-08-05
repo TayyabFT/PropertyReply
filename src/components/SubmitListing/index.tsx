@@ -17,6 +17,10 @@ import {
   type Submission,
   ApiRequestError,
 } from "@/lib/api";
+import {
+  PUBLISH_REQUIRES_MEMBERSHIP_MESSAGE,
+  userHasPaidSubscription,
+} from "@/lib/planAccess";
 
 type FormState = {
   title: string;
@@ -287,9 +291,9 @@ export default function SubmitListing() {
     }
   };
 
-  const freeTrialListingAvailable =
-    Boolean(user?.onTrial) &&
-    !submissions.some((item) => item.isTrialListing);
+  const canPublish = userHasPaidSubscription(user);
+  const trialEndedWithoutPlan =
+    !canPublish && !user?.onTrial && user?.role !== "admin";
 
   const handleSubmit = async () => {
     if (!token) return;
@@ -297,19 +301,32 @@ export default function SubmitListing() {
     setSubmitting(true);
 
     try {
-      const res = await submitApi.submit(token, buildPayload(form));
-      if (res.data.freeTrialListing || !res.data.checkoutUrl) {
-        setSuccess(
-          res.message ||
-            res.data.message ||
-            "Submitted with your free trial listing credit. It will be removed if you don't subscribe before your trial ends.",
+      // Keep their work as a draft before blocking publish
+      if (!canPublish) {
+        try {
+          const payload = buildPayload(form, draftId ?? undefined);
+          const draftRes = draftId
+            ? await submitApi.updateDraft(token, draftId, payload)
+            : await submitApi.saveDraft(token, payload);
+          setDraftId(draftRes.data.id);
+          await refreshDrafts(token);
+        } catch {
+          // still show membership message even if draft save fails
+        }
+
+        setError(
+          trialEndedWithoutPlan || !user?.onTrial
+            ? PUBLISH_REQUIRES_MEMBERSHIP_MESSAGE
+            : "To publish your property and reach buyers, choose a membership. Your listing has been saved as a draft.",
         );
-        setForm(emptyForm);
-        setDraftId(null);
-        await refreshDrafts(token);
         window.scrollTo({ top: 0, behavior: "smooth" });
         setSubmitting(false);
         return;
+      }
+
+      const res = await submitApi.submit(token, buildPayload(form));
+      if (!res.data.checkoutUrl) {
+        throw new Error("Checkout URL missing");
       }
       window.location.href = res.data.checkoutUrl;
     } catch (err) {
@@ -328,6 +345,13 @@ export default function SubmitListing() {
     resetMessages();
     try {
       const res = await submitApi.retryPayment(token, id);
+      if (!res.data.checkoutUrl) {
+        setError(
+          res.message ||
+            "Unable to start payment. Please subscribe to a membership first.",
+        );
+        return;
+      }
       window.location.href = res.data.checkoutUrl;
     } catch (err) {
       const message =
@@ -818,30 +842,41 @@ export default function SubmitListing() {
               </div>
             </div>
 
-            <div
-              className={
-                freeTrialListingAvailable ? "alert alert-info" : "alert alert-warn"
-              }
-            >
-              <span>{freeTrialListingAvailable ? "i" : "⚠️"}</span>
+            <div className="alert alert-warn">
+              <span>⚠️</span>
               <div>
-                {freeTrialListingAvailable ? (
-                  <>
-                    You have <strong>1 free listing</strong> included with your
-                    7-day trial. No £10 fee for this submission. If you don&apos;t
-                    subscribe before the trial ends, this listing will be removed.
-                    Extra listings still cost £10 each.
-                  </>
-                ) : (
+                {canPublish ? (
                   <>
                     A £10 listing fee applies per submission, payable by card on
                     the next step. Listings are reviewed within 24–48 hours after
-                    payment. Inaccurate, misleading, or spam listings will be
-                    removed and may result in account suspension.
+                    payment.
+                  </>
+                ) : user?.onTrial ? (
+                  <>
+                    During your free trial you can prepare your listing and save
+                    it as a draft. To publish and reach buyers, choose a
+                    membership — then a £10 listing fee applies.
+                  </>
+                ) : (
+                  <>
+                    Your free trial has ended. To publish your property and reach
+                    buyers, choose a membership.
                   </>
                 )}
               </div>
             </div>
+
+            {!canPublish && (
+              <div style={{ marginBottom: "16px" }}>
+                <button
+                  type="button"
+                  className="btn btn-gold"
+                  onClick={() => router.push("/app/membership")}
+                >
+                  Choose a membership →
+                </button>
+              </div>
+            )}
 
             <div className="form-actions">
               <button
@@ -851,7 +886,7 @@ export default function SubmitListing() {
               >
                 ← Cancel
               </button>
-              <div style={{ display: "flex", gap: "10px" }}>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 <button
                   type="button"
                   className="btn btn-outline"
@@ -867,12 +902,10 @@ export default function SubmitListing() {
                   disabled={submitting || savingDraft}
                 >
                   {submitting
-                    ? freeTrialListingAvailable
-                      ? "Submitting…"
-                      : "Redirecting to payment…"
-                    : freeTrialListingAvailable
-                      ? "Submit free trial listing →"
-                      : "Pay £10 & Submit →"}
+                    ? canPublish
+                      ? "Redirecting to payment…"
+                      : "Saving…"
+                    : "Publish Listing →"}
                 </button>
               </div>
             </div>
