@@ -269,7 +269,7 @@ function MembershipContent() {
               {user.commercialPartnershipEndsAt
                 ? ` until ${new Date(user.commercialPartnershipEndsAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
                 : ""}
-              . Listing fees are waived; success fee is 5% on completed deals.
+              . Listing submissions are free; success fee is 5% on completed deals.
             </span>
           </div>
         )}
