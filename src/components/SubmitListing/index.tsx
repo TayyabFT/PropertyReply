@@ -325,8 +325,17 @@ export default function SubmitListing() {
       }
 
       const res = await submitApi.submit(token, buildPayload(form));
-      if (!res.data.checkoutUrl) {
-        throw new Error("Checkout URL missing");
+      if (res.data.listingFeeWaived || !res.data.checkoutUrl) {
+        setSuccess(
+          res.data.listingFeeWaived
+            ? "Listing submitted under Founders Club — no listing fee. It is now in our review queue."
+            : "Listing submitted and is now in our review queue.",
+        );
+        setDraftId(null);
+        await refreshDrafts(token);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        setSubmitting(false);
+        return;
       }
       window.location.href = res.data.checkoutUrl;
     } catch (err) {
@@ -846,16 +855,25 @@ export default function SubmitListing() {
               <span>⚠️</span>
               <div>
                 {canPublish ? (
-                  <>
-                    A £10 listing fee applies per submission, payable by card on
-                    the next step. Listings are reviewed within 24–48 hours after
-                    payment.
-                  </>
+                  user?.listingFeeWaived || user?.onCommercial ? (
+                    <>
+                      Founders Club: publish without the £10 listing fee. A 5%
+                      success fee applies when deals complete. Listings are
+                      reviewed within 24–48 hours.
+                    </>
+                  ) : (
+                    <>
+                      A £10 listing fee applies per submission, payable by card on
+                      the next step. Listings are reviewed within 24–48 hours after
+                      payment.
+                    </>
+                  )
                 ) : user?.onTrial ? (
                   <>
                     During your free trial you can prepare your listing and save
                     it as a draft. To publish and reach buyers, choose a
-                    membership — then a £10 listing fee applies.
+                    membership — then a £10 listing fee applies (waived for
+                    Founders Club).
                   </>
                 ) : (
                   <>

@@ -21,6 +21,7 @@ export type Plan = {
   buttonStyle: CSSProperties;
   buttonLabel: string;
   comingSoon?: boolean;
+  inviteOnly?: boolean;
 };
 
 type PlanCardProps = {

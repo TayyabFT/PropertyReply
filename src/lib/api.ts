@@ -10,8 +10,14 @@ export type ApiUser = {
   subscriptionStatus?: "none" | "trialing" | "active" | "past_due" | "canceled";
   /** ISO date when complimentary trial ends */
   trialEndsAt?: string | null;
+  /** End of Founders Club / Commercial Partnership term */
+  commercialPartnershipEndsAt?: string | null;
   /** True while free trial is still active (not a paid sub) */
   onTrial?: boolean;
+  /** True while on invite-only Founders Club / Commercial */
+  onCommercial?: boolean;
+  /** True when £10 listing fee is waived (Founders Club) */
+  listingFeeWaived?: boolean;
   /** True only when Stripe subscription is active (not free trial) */
   hasPaidPlan?: boolean;
   /** True when the user may still opt in to a one-time free trial */
@@ -774,6 +780,14 @@ export const billingApi = {
       data: { user: ApiUser };
     }>("/billing/start-trial", { method: "POST" }, token);
   },
+
+  commercialCheckout(token: string, inviteCode: string) {
+    return request<{ success: boolean; data: { url: string } }>(
+      "/billing/commercial-checkout",
+      { method: "POST", body: JSON.stringify({ inviteCode }) },
+      token,
+    );
+  },
 };
 
 export type SubmitOptions = {
@@ -862,6 +876,7 @@ type SubmitCheckoutPayload = {
   data: {
     submissionId: string;
     checkoutUrl: string | null;
+    listingFeeWaived?: boolean;
     freeTrialListing?: boolean;
     message?: string;
   };
@@ -1174,10 +1189,75 @@ export const adminApi = {
     );
   },
 
-  markSold(token: string, id: string, salePrice: number) {
+  markSold(token: string, id: string, salePrice: number, partnerFeeGBP?: number) {
     return request<AdminActionPayload>(
       `/admin/listings/${id}/mark-sold`,
-      { method: "POST", body: JSON.stringify({ salePrice }) },
+      {
+        method: "POST",
+        body: JSON.stringify({
+          salePrice,
+          ...(partnerFeeGBP != null ? { partnerFeeGBP } : {}),
+        }),
+      },
+      token,
+    );
+  },
+
+  getCommercialInvites(token: string) {
+    return request<{
+      success: boolean;
+      data: Array<{
+        id: string;
+        code: string;
+        email: string | null;
+        note: string;
+        status: string;
+        expiresAt: string | null;
+        usedAt: string | null;
+        usedBy: string | null;
+        usedByEmail: string | null;
+        createdBy: string | null;
+        inviteUrl: string;
+        createdAt: string;
+      }>;
+    }>("/admin/commercial-invites", { method: "GET" }, token);
+  },
+
+  createCommercialInvite(
+    token: string,
+    body: { email?: string; note?: string; daysValid?: number } = {},
+  ) {
+    return request<{
+      success: boolean;
+      message?: string;
+      data: {
+        id: string;
+        code: string;
+        email: string | null;
+        note: string;
+        expiresAt: string;
+        status: string;
+        inviteUrl: string;
+      };
+    }>(
+      "/admin/commercial-invites",
+      { method: "POST", body: JSON.stringify(body) },
+      token,
+    );
+  },
+
+  revokeCommercialInvite(token: string, id: string) {
+    return request<AdminActionPayload>(
+      `/admin/commercial-invites/${id}/revoke`,
+      { method: "POST" },
+      token,
+    );
+  },
+
+  grantCommercial(token: string, userId: string, months = 12) {
+    return request<AdminUserPayload>(
+      `/admin/users/${userId}/grant-commercial`,
+      { method: "POST", body: JSON.stringify({ months }) },
       token,
     );
   },

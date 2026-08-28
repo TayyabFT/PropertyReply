@@ -18,6 +18,7 @@ const adminNav: { label: string; target: string }[] = [
   { label: "🏠 Listing Queue", target: "admin-queue" },
   { label: "👥 Users", target: "admin-users" },
   { label: "🛡 Admins", target: "admin-admins" },
+  { label: "🏛 Founders Club", target: "admin-founders" },
   { label: "🏷 Live Listings", target: "admin-listings" },
   { label: "⚑ Reports", target: "admin-reports" },
 ];
@@ -49,6 +50,25 @@ export default function AdminPanel() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [creatingAdmin, setCreatingAdmin] = useState(false);
+  const [commercialInvites, setCommercialInvites] = useState<
+    Array<{
+      id: string;
+      code: string;
+      email: string | null;
+      note: string;
+      status: string;
+      expiresAt: string | null;
+      usedBy: string | null;
+      usedByEmail: string | null;
+      inviteUrl: string;
+    }>
+  >([]);
+  const [inviteForm, setInviteForm] = useState({
+    email: "",
+    note: "",
+    daysValid: "30",
+  });
+  const [creatingInvite, setCreatingInvite] = useState(false);
 
   const [userSearch, setUserSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("");
@@ -85,19 +105,28 @@ export default function AdminPanel() {
       setLoading(true);
       setError(null);
       try {
-        const [statsRes, subsRes, usersRes, adminsRes, reportsRes, listingsRes] =
-          await Promise.all([
-            adminApi.getStats(authToken),
-            adminApi.getSubmissions(authToken, "pending"),
-            adminApi.getUsers(authToken),
-            adminApi.getAdmins(authToken),
-            adminApi.getReports(authToken),
-            adminApi.getListings(authToken),
-          ]);
+        const [
+          statsRes,
+          subsRes,
+          usersRes,
+          adminsRes,
+          invitesRes,
+          reportsRes,
+          listingsRes,
+        ] = await Promise.all([
+          adminApi.getStats(authToken),
+          adminApi.getSubmissions(authToken, "pending"),
+          adminApi.getUsers(authToken),
+          adminApi.getAdmins(authToken),
+          adminApi.getCommercialInvites(authToken),
+          adminApi.getReports(authToken),
+          adminApi.getListings(authToken),
+        ]);
         setStats(statsRes.data);
         setSubmissions(subsRes.data);
         setUsers(usersRes.data);
         setAdmins(adminsRes.data);
+        setCommercialInvites(invitesRes.data);
         setReports(reportsRes.data);
         setListings(listingsRes.data);
       } catch (err) {
@@ -235,17 +264,114 @@ export default function AdminPanel() {
       return;
     }
 
+    let partnerFeeGBP: number | undefined;
+    const partnerFeeInput = window.prompt(
+      "If the seller is on Founders Club, enter their fee/remuneration received (GBP).\nLeave blank for standard 10% of sale price.",
+    );
+    if (partnerFeeInput && partnerFeeInput.trim()) {
+      partnerFeeGBP = Number(partnerFeeInput.replace(/[^0-9.]/g, ""));
+      if (!partnerFeeGBP || partnerFeeGBP <= 0) {
+        showToast("Please enter a valid partner fee, or leave blank.");
+        return;
+      }
+    }
+
     setBusyId(listing.id);
     try {
-      await adminApi.markSold(token, listing.id, salePrice);
+      await adminApi.markSold(token, listing.id, salePrice, partnerFeeGBP);
       if (token) {
         const res = await adminApi.getListings(token);
         setListings(res.data);
       }
-      showToast("Listing marked as sold — a 10% commission invoice was sent.");
+      showToast(
+        partnerFeeGBP
+          ? "Marked sold — 5% Founders Club success fee invoice sent."
+          : "Listing marked as sold — a 10% commission invoice was sent.",
+      );
     } catch (err) {
       showToast(
         err instanceof ApiRequestError ? err.message : "Could not mark listing sold.",
+      );
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleCreateInvite = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!token) return;
+    setCreatingInvite(true);
+    try {
+      const res = await adminApi.createCommercialInvite(token, {
+        email: inviteForm.email.trim() || undefined,
+        note: inviteForm.note.trim() || undefined,
+        daysValid: Number(inviteForm.daysValid) || 30,
+      });
+      setCommercialInvites((prev) => [
+        {
+          ...res.data,
+          expiresAt: res.data.expiresAt || null,
+          usedBy: null,
+          usedByEmail: null,
+        },
+        ...prev,
+      ]);
+      setInviteForm({ email: "", note: "", daysValid: "30" });
+      showToast(`Invite ${res.data.code} created. Share the link with your partner.`);
+      try {
+        await navigator.clipboard.writeText(res.data.inviteUrl);
+        showToast(`Invite ${res.data.code} created — link copied to clipboard.`);
+      } catch {
+        // clipboard may be unavailable
+      }
+    } catch (err) {
+      showToast(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Could not create invite.",
+      );
+    } finally {
+      setCreatingInvite(false);
+    }
+  };
+
+  const handleRevokeInvite = async (id: string) => {
+    if (!token) return;
+    setBusyId(id);
+    try {
+      await adminApi.revokeCommercialInvite(token, id);
+      setCommercialInvites((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, status: "revoked" } : i)),
+      );
+      showToast("Invite revoked.");
+    } catch (err) {
+      showToast(
+        err instanceof ApiRequestError ? err.message : "Could not revoke invite.",
+      );
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleGrantCommercial = async (userId: string) => {
+    if (!token) return;
+    if (
+      !window.confirm(
+        "Grant Founders Club (Commercial) for 12 months? Listing fees waived, 5% success fee. They can pay £25/mo separately if needed.",
+      )
+    ) {
+      return;
+    }
+    setBusyId(userId);
+    try {
+      await adminApi.grantCommercial(token, userId, 12);
+      await loadUsers(token, userSearch, planFilter);
+      showToast("Founders Club partnership granted.");
+    } catch (err) {
+      showToast(
+        err instanceof ApiRequestError
+          ? err.message
+          : "Could not grant Founders Club.",
       );
     } finally {
       setBusyId(null);
@@ -503,6 +629,7 @@ export default function AdminPanel() {
                     <option value="Premium">Premium</option>
                     <option value="VIP">VIP</option>
                     <option value="Ultra">Ultra</option>
+                    <option value="Commercial">Founders Club</option>
                   </select>
                   <button className="btn btn-outline btn-sm" type="submit">
                     Search
@@ -548,6 +675,7 @@ export default function AdminPanel() {
                               <option value="Premium">Premium</option>
                               <option value="VIP">VIP</option>
                               <option value="Ultra">Ultra</option>
+                              <option value="Commercial">Founders Club</option>
                             </select>
                           </td>
                           <td>
@@ -607,6 +735,13 @@ export default function AdminPanel() {
                                   Activate
                                 </button>
                               )}
+                              <button
+                                className="btn btn-outline btn-sm"
+                                disabled={busyId === row.id}
+                                onClick={() => handleGrantCommercial(row.id)}
+                              >
+                                Grant Founders Club
+                              </button>
                               <button
                                 className="btn btn-red btn-sm"
                                 disabled={busyId === row.id}
@@ -746,9 +881,166 @@ export default function AdminPanel() {
               </div>
             </div>
 
+            <div className="admin-card" id="admin-founders">
+              <div className="admin-card-header">
+                <h3>🏛 Founders Club — Commercial Partnership Invites</h3>
+              </div>
+              <div className="admin-card-body">
+                <p className="muted" style={{ marginBottom: "16px" }}>
+                  Invite-only £25/mo for 12 months, no listing fees, 5% success
+                  fee. Create a code and share the link — only people you invite
+                  can join. Or grant Founders Club directly from User Management.
+                </p>
+
+                <form
+                  onSubmit={handleCreateInvite}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+                    gap: "12px",
+                    marginBottom: "20px",
+                    alignItems: "end",
+                  }}
+                >
+                  <label style={{ display: "grid", gap: "4px", textAlign: "left" }}>
+                    <span style={{ fontSize: ".75rem", color: "var(--slate)" }}>
+                      Lock to email (optional)
+                    </span>
+                    <input
+                      type="email"
+                      value={inviteForm.email}
+                      onChange={(e) =>
+                        setInviteForm((f) => ({ ...f, email: e.target.value }))
+                      }
+                      placeholder="partner@example.com"
+                      style={{ padding: "8px 12px" }}
+                    />
+                  </label>
+                  <label style={{ display: "grid", gap: "4px", textAlign: "left" }}>
+                    <span style={{ fontSize: ".75rem", color: "var(--slate)" }}>
+                      Note
+                    </span>
+                    <input
+                      type="text"
+                      value={inviteForm.note}
+                      onChange={(e) =>
+                        setInviteForm((f) => ({ ...f, note: e.target.value }))
+                      }
+                      placeholder="e.g. Abdullah Suleman"
+                      style={{ padding: "8px 12px" }}
+                    />
+                  </label>
+                  <label style={{ display: "grid", gap: "4px", textAlign: "left" }}>
+                    <span style={{ fontSize: ".75rem", color: "var(--slate)" }}>
+                      Valid days
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={365}
+                      value={inviteForm.daysValid}
+                      onChange={(e) =>
+                        setInviteForm((f) => ({
+                          ...f,
+                          daysValid: e.target.value,
+                        }))
+                      }
+                      style={{ padding: "8px 12px" }}
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    className="btn btn-gold btn-sm"
+                    disabled={creatingInvite}
+                    style={{ height: "40px" }}
+                  >
+                    {creatingInvite ? "Creating…" : "Create Invite"}
+                  </button>
+                </form>
+
+                {commercialInvites.length === 0 ? (
+                  <p className="muted">No invites yet.</p>
+                ) : (
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Code</th>
+                        <th>Email lock</th>
+                        <th>Note</th>
+                        <th>Status</th>
+                        <th>Used by</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {commercialInvites.map((invite) => (
+                        <tr key={invite.id}>
+                          <td>
+                            <strong className="mono">{invite.code}</strong>
+                          </td>
+                          <td>{invite.email || "—"}</td>
+                          <td>{invite.note || "—"}</td>
+                          <td>
+                            <span
+                              className={
+                                invite.status === "active"
+                                  ? "tag badge-green"
+                                  : invite.status === "used"
+                                    ? "tag badge-blue"
+                                    : "tag badge-red"
+                              }
+                            >
+                              {invite.status}
+                            </span>
+                          </td>
+                          <td>
+                            {invite.usedBy
+                              ? `${invite.usedBy}${invite.usedByEmail ? ` (${invite.usedByEmail})` : ""}`
+                              : "—"}
+                          </td>
+                          <td>
+                            <div className="action-btns">
+                              {invite.status === "active" && (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline btn-sm"
+                                    onClick={async () => {
+                                      try {
+                                        await navigator.clipboard.writeText(
+                                          invite.inviteUrl,
+                                        );
+                                        showToast("Invite link copied.");
+                                      } catch {
+                                        showToast(invite.inviteUrl);
+                                      }
+                                    }}
+                                  >
+                                    Copy link
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-red btn-sm"
+                                    disabled={busyId === invite.id}
+                                    onClick={() => handleRevokeInvite(invite.id)}
+                                  >
+                                    Revoke
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+
             <div className="admin-card" id="admin-listings">
               <div className="admin-card-header">
-                <h3>🏷 Live Listings — Mark as Sold (10% commission)</h3>
+                <h3>🏷 Live Listings — Mark as Sold (commission / success fee)</h3>
               </div>
               <div className="admin-card-body">
                 {listings.length === 0 ? (

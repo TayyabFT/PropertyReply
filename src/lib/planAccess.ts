@@ -7,6 +7,7 @@ export const PUBLISH_REQUIRES_MEMBERSHIP_MESSAGE =
 export function userPlanLabel(user: ApiUser | null | undefined): string {
   if (!user) return "No Plan";
   if (user.role === "admin") return "Admin";
+  if (user.onCommercial || user.plan === "Commercial") return "Founders Club";
   if (user.onTrial || (user.plan && !user.hasPaidPlan && user.subscriptionStatus === "trialing")) {
     return "Free Trial";
   }
@@ -20,6 +21,7 @@ export function userPlanLabel(user: ApiUser | null | undefined): string {
     }
     if (user.subscriptionStatus === "trialing") return "Free Trial";
   }
+  if (user.hasPaidPlan && user.plan === "Commercial") return "Founders Club";
   if (user.hasPaidPlan && user.plan) return `${user.plan} Member`;
   if (user.plan && user.subscriptionStatus === "active" && user.hasPaidPlan) {
     return `${user.plan} Member`;
@@ -31,6 +33,7 @@ export function userPlanLabel(user: ApiUser | null | undefined): string {
 export function userHasPlanAccess(user: ApiUser | null | undefined): boolean {
   if (!user) return false;
   if (user.role === "admin") return true;
+  if (user.onCommercial || user.plan === "Commercial") return true;
   if (!user.plan) return false;
 
   if (user.onTrial) return true;
@@ -54,6 +57,8 @@ export function userHasPaidSubscription(
 ): boolean {
   if (!user) return false;
   if (user.role === "admin") return true;
+  if (typeof user.hasPaidPlan === "boolean") return user.hasPaidPlan;
+  if (user.onCommercial || user.plan === "Commercial") return true;
   return user.subscriptionStatus === "active" && Boolean(user.plan) && !user.onTrial;
 }
 

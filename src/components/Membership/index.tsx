@@ -30,17 +30,33 @@ function MembershipContent() {
 
   const checkoutParam = searchParams.get("checkout");
   const sessionId = searchParams.get("session_id");
+  const inviteFromUrl = searchParams.get("invite") || "";
+
+  const [inviteCode, setInviteCode] = useState(inviteFromUrl);
+  const [showInviteBox, setShowInviteBox] = useState(Boolean(inviteFromUrl));
 
   const canStartTrial = userCanStartTrial(user);
   const trialEnded = userTrialHasEnded(user);
   const onTrial = Boolean(user?.onTrial);
+  const onCommercial = Boolean(user?.onCommercial || user?.plan === "Commercial");
   const hasPaid = userHasPaidSubscription(user);
   const showTrialCard = !user || canStartTrial;
 
+  useEffect(() => {
+    if (inviteFromUrl) {
+      setInviteCode(inviteFromUrl);
+      setShowInviteBox(true);
+    }
+  }, [inviteFromUrl]);
+
   const allPlans = useMemo(() => {
-    if (showTrialCard) return [freeTrialPlan, ...plans];
-    return plans;
-  }, [showTrialCard]);
+    // Hide Founders Club card when already on Commercial
+    const base = onCommercial
+      ? plans.filter((p) => p.id !== "commercial")
+      : plans;
+    if (showTrialCard) return [freeTrialPlan, ...base];
+    return base;
+  }, [showTrialCard, onCommercial]);
 
   // Default: 3 cards. Expand with "See all plans".
   const displayPlans = useMemo(() => {
@@ -138,6 +154,35 @@ function MembershipContent() {
       return;
     }
 
+    if (planId === "commercial") {
+      if (!token) {
+        router.push(`/login?next=${encodeURIComponent("/app/membership?invite=" + (inviteCode || ""))}`);
+        return;
+      }
+      setShowInviteBox(true);
+      if (!inviteCode.trim()) {
+        setError("Enter your Founders Club invite code to continue.");
+        return;
+      }
+      setError("");
+      setCheckoutLoadingPlan("commercial");
+      try {
+        const response = await billingApi.commercialCheckout(
+          token,
+          inviteCode.trim(),
+        );
+        window.location.href = response.data.url;
+      } catch (err) {
+        setError(
+          err instanceof ApiRequestError
+            ? err.message
+            : "Unable to start Founders Club checkout.",
+        );
+        setCheckoutLoadingPlan(null);
+      }
+      return;
+    }
+
     if (planId !== "premium") return;
 
     if (!token) {
@@ -187,9 +232,16 @@ function MembershipContent() {
         year: "numeric",
       })
     : null;
-  // Trial users should still be able to buy Premium (don't treat as "Current Plan")
   const paidCurrentPlanId =
-    onTrial || user?.subscriptionStatus === "trialing" ? "" : currentPlanId;
+    onTrial || user?.subscriptionStatus === "trialing"
+      ? ""
+      : currentPlanId === "commercial"
+        ? "commercial"
+        : currentPlanId;
+
+  const handleCommercialInviteSubmit = async () => {
+    await handleSelect("commercial");
+  };
 
   return (
     <section className="section section-alt" id="membership">
@@ -200,11 +252,27 @@ function MembershipContent() {
           </div>
           <h2>Choose Your Access Level</h2>
           <p className="muted">
-            Start with a 7-day free Premium trial to browse deals and prepare
-            listings, or subscribe now. Publishing requires a paid membership —
-            each listing has a £10 fee.
+            Start with a 7-day free Premium trial, subscribe to Premium, or join
+            Founders Club with an invite (£25/mo, no listing fees, 5% success
+            fee). Standard publishing has a £10 listing fee.
           </p>
         </div>
+
+        {user && onCommercial && (
+          <div
+            className="alert alert-info"
+            style={{ margin: "16px auto", maxWidth: "560px" }}
+          >
+            <span>i</span>
+            <span>
+              You&apos;re on <strong>Founders Club</strong>
+              {user.commercialPartnershipEndsAt
+                ? ` until ${new Date(user.commercialPartnershipEndsAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+                : ""}
+              . Listing fees are waived; success fee is 5% on completed deals.
+            </span>
+          </div>
+        )}
 
         {user && onTrial && trialEndsLabel && (
           <div
@@ -255,11 +323,54 @@ function MembershipContent() {
           </div>
         )}
 
+        {(showInviteBox || inviteFromUrl) && !onCommercial && (
+          <div
+            style={{
+              margin: "16px auto 8px",
+              maxWidth: "480px",
+              padding: "16px",
+              border: "1px solid rgba(0,0,0,.08)",
+              borderRadius: "12px",
+              textAlign: "left",
+              background: "var(--white)",
+            }}
+          >
+            <p style={{ fontWeight: 600, marginBottom: "8px" }}>
+              Founders Club invite
+            </p>
+            <p className="muted" style={{ fontSize: ".85rem", marginBottom: "12px" }}>
+              Enter the invite code from Property Reply to unlock £25/mo
+              Commercial Partnership checkout.
+            </p>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <input
+                type="text"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                placeholder="FC-XXXXXX"
+                style={{ flex: 1, minWidth: "160px", padding: "10px 12px" }}
+              />
+              <button
+                type="button"
+                className="btn btn-gold btn-sm"
+                disabled={checkoutLoadingPlan === "commercial"}
+                onClick={handleCommercialInviteSubmit}
+              >
+                {checkoutLoadingPlan === "commercial"
+                  ? "Please wait…"
+                  : "Activate →"}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="membership-grid" style={{ marginTop: "8px" }}>
           {displayPlans.map((plan) => {
             const isSelectable =
               !plan.comingSoon &&
-              (plan.id === "trial" || plan.id === "premium");
+              (plan.id === "trial" ||
+                plan.id === "premium" ||
+                plan.id === "commercial");
 
             return (
               <PlanCard
@@ -267,8 +378,8 @@ function MembershipContent() {
                 plan={
                   plan.id === "premium" && showTrialCard
                     ? { ...plan, cardClass: "plan-card" }
-                    : plan.id === "trial"
-                      ? plan
+                    : plan.id === "commercial" && onCommercial
+                      ? { ...plan, buttonLabel: "Current Plan" }
                       : plan.id === "premium" && onTrial
                         ? {
                             ...plan,
