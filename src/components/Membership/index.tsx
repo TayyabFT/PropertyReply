@@ -253,8 +253,8 @@ function MembershipContent() {
           <h2>Choose Your Access Level</h2>
           <p className="muted">
             Start with a 7-day free Premium trial, subscribe to Premium, or join
-            Founders Club with an invite (£25/mo, no listing fees, 5% success
-            fee). Standard publishing has a £10 listing fee.
+            Founders Club with an invite (£25/mo, 5% success fee). Publishing
+            listings is free for all members.
           </p>
         </div>
 
@@ -428,9 +428,9 @@ function MembershipContent() {
             color: "var(--slate)",
           }}
         >
-          One free 7-day trial per account. Publish listings after you
-          subscribe — £10 listing fee per property. Plans billed monthly;
-          cancel anytime.
+          One free 7-day trial per account. Publishing listings is free for
+          members. Founders Club partners pay a 5% success fee on completed
+          deals. Plans billed monthly; cancel anytime.
         </p>
       </div>
     </section>

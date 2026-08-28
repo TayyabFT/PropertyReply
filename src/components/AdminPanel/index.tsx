@@ -887,9 +887,10 @@ export default function AdminPanel() {
               </div>
               <div className="admin-card-body">
                 <p className="muted" style={{ marginBottom: "16px" }}>
-                  Invite-only £25/mo for 12 months, no listing fees, 5% success
-                  fee. Create a code and share the link — only people you invite
-                  can join. Or grant Founders Club directly from User Management.
+                  Invite-only £25/mo for 12 months, 5% success fee. Listing
+                  submissions are free for all members. Create a code and share
+                  the link — only people you invite can join. Or grant Founders
+                  Club directly from User Management.
                 </p>
 
                 <form

@@ -16,7 +16,7 @@ export type ApiUser = {
   onTrial?: boolean;
   /** True while on invite-only Founders Club / Commercial */
   onCommercial?: boolean;
-  /** True when £10 listing fee is waived (Founders Club) */
+  /** True when listing fee is waived (always true — listings are free) */
   listingFeeWaived?: boolean;
   /** True only when Stripe subscription is active (not free trial) */
   hasPaidPlan?: boolean;

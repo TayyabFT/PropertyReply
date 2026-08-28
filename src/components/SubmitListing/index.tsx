@@ -327,9 +327,7 @@ export default function SubmitListing() {
       const res = await submitApi.submit(token, buildPayload(form));
       if (res.data.listingFeeWaived || !res.data.checkoutUrl) {
         setSuccess(
-          res.data.listingFeeWaived
-            ? "Listing submitted under Founders Club — no listing fee. It is now in our review queue."
-            : "Listing submitted and is now in our review queue.",
+          "Listing submitted at no charge. It is now in our review queue.",
         );
         setDraftId(null);
         await refreshDrafts(token);
@@ -355,10 +353,10 @@ export default function SubmitListing() {
     try {
       const res = await submitApi.retryPayment(token, id);
       if (!res.data.checkoutUrl) {
-        setError(
-          res.message ||
-            "Unable to start payment. Please subscribe to a membership first.",
+        setSuccess(
+          "Listing fee is no longer required — your submission is in the review queue.",
         );
+        await refreshDrafts(token);
         return;
       }
       window.location.href = res.data.checkoutUrl;
@@ -366,7 +364,7 @@ export default function SubmitListing() {
       const message =
         err instanceof ApiRequestError
           ? err.message
-          : "Unable to start payment. Please try again.";
+          : "Unable to update this submission. Please try again.";
       setError(message);
     }
   };
@@ -574,7 +572,7 @@ export default function SubmitListing() {
                           className="btn btn-gold btn-sm"
                           onClick={() => handleRetryPayment(item.id)}
                         >
-                          Complete Payment (£10)
+                          Submit to review (free)
                         </button>
                       )}
                     </td>
@@ -855,30 +853,30 @@ export default function SubmitListing() {
               <span>⚠️</span>
               <div>
                 {canPublish ? (
-                  user?.listingFeeWaived || user?.onCommercial ? (
+                  user?.onCommercial ? (
                     <>
-                      Founders Club: publish without the £10 listing fee. A 5%
-                      success fee applies when deals complete. Listings are
-                      reviewed within 24–48 hours.
+                      Founders Club: listings are free to publish. A 5% success
+                      fee applies when deals complete. Listings are reviewed
+                      within 24–48 hours.
                     </>
                   ) : (
                     <>
-                      A £10 listing fee applies per submission, payable by card on
-                      the next step. Listings are reviewed within 24–48 hours after
-                      payment.
+                      Publishing is free for members. Your listing goes straight
+                      to our review queue and is usually reviewed within 24–48
+                      hours.
                     </>
                   )
                 ) : user?.onTrial ? (
                   <>
                     During your free trial you can prepare your listing and save
                     it as a draft. To publish and reach buyers, choose a
-                    membership — then a £10 listing fee applies (waived for
-                    Founders Club).
+                    membership — listing submissions are free for members.
                   </>
                 ) : (
                   <>
                     Your free trial has ended. To publish your property and reach
-                    buyers, choose a membership.
+                    buyers, choose a membership. Listing submissions are free
+                    once you have an active plan.
                   </>
                 )}
               </div>
