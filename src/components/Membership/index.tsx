@@ -3,6 +3,8 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PlanCard from "./PlanCard";
+import PartnerOffer from "./PartnerOffer";
+import { userHasPlanAccess } from "@/lib/planAccess";
 import { freeTrialPlan, plans } from "./plans";
 import { useAuth } from "@/lib/auth";
 import { authApi, billingApi, ApiRequestError } from "@/lib/api";
@@ -40,6 +42,8 @@ function MembershipContent() {
   const onTrial = Boolean(user?.onTrial);
   const onCommercial = Boolean(user?.onCommercial || user?.plan === "Commercial");
   const hasPaid = userHasPaidSubscription(user);
+  const onInvitedPartner = user?.plan === "InvitedPartner" && userHasPlanAccess(user);
+  const partnerExpired = Boolean(user?.invitedPartnerEndsAt && new Date(user.invitedPartnerEndsAt) <= new Date());
   const showTrialCard = !user || canStartTrial;
 
   useEffect(() => {
@@ -51,12 +55,18 @@ function MembershipContent() {
 
   const allPlans = useMemo(() => {
     // Hide Founders Club card when already on Commercial
-    const base = onCommercial
+    const available = onCommercial
       ? plans.filter((p) => p.id !== "commercial")
       : plans;
+    const base = available.map((plan) => user?.invitedPartnerStartedAt && plan.id === "commercial" ? {
+      ...plan,
+      desc: "Invite-only subscription. Former Invited Partners pay a 10% success fee on the property sale price.",
+      features: plan.features.map((feature) => feature.text.includes("success fee")
+        ? { ...feature, text: "10% success fee on property sale price" } : feature),
+    } : plan);
     if (showTrialCard) return [freeTrialPlan, ...base];
     return base;
-  }, [showTrialCard, onCommercial]);
+  }, [showTrialCard, onCommercial, user?.invitedPartnerStartedAt]);
 
   // Default: 3 cards. Expand with "See all plans".
   const displayPlans = useMemo(() => {
@@ -128,6 +138,10 @@ function MembershipContent() {
   }, [checkoutParam, sessionId, token]);
 
   const handleSelect = async (planId: string) => {
+    if (onInvitedPartner) {
+      setError("Your two-month offer is active. Return here to choose a subscription when it ends. No card is needed now.");
+      return;
+    }
     if (planId === "trial") {
       if (!token) {
         router.push("/register");
@@ -252,11 +266,22 @@ function MembershipContent() {
           </div>
           <h2>Choose Your Access Level</h2>
           <p className="muted">
-            Start with a 7-day free Premium trial, subscribe to Premium, or join
-            Founders Club with an invite (£25/mo, 5% success fee). Publishing
-            listings is free for all members.
+            {user?.invitedPartnerStartedAt
+              ? "Choose an available subscription after your offer ends. Listings remain free; the post-offer success fee is 10% of the property sale price."
+              : "Start with a 7-day free Premium trial, subscribe to Premium, or join Founders Club with an invite (£25/mo, 5% success fee). Publishing listings is free for all members."}
           </p>
         </div>
+
+        {user?.invitedPartnerEndsAt && (
+          <div className="alert alert-info" style={{ margin: "16px auto", maxWidth: 680 }}>
+            <span>{onInvitedPartner
+              ? `Invited Partner: free membership until ${new Date(user.invitedPartnerEndsAt).toLocaleDateString("en-GB")}. No card or automatic subscription charge. Listings are free; the success fee is 5% of sale price.`
+              : partnerExpired
+                ? `Your Invited Partner offer has ended. ${user.partnerListingsHidden ? "Your listings are hidden until you activate a paid subscription. Choose a plan below." : "Your paid subscription keeps your listings visible."} Listings remain free; the success fee is 10% of sale price.`
+                : "Your Invited Partner offer is no longer active. Check your subscription below."}</span>
+          </div>
+        )}
+        {user && !user.invitedPartnerStartedAt && user.role !== "admin" && <PartnerOffer />}
 
         {user && onCommercial && (
           <div
@@ -269,7 +294,7 @@ function MembershipContent() {
               {user.commercialPartnershipEndsAt
                 ? ` until ${new Date(user.commercialPartnershipEndsAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
                 : ""}
-              . Listing submissions are free; success fee is 5% on completed deals.
+              . Listing submissions are free; {user.invitedPartnerStartedAt ? "your post-offer success fee is 10% of sale price." : "success fee is 5% on completed deals."}
             </span>
           </div>
         )}
@@ -409,7 +434,7 @@ function MembershipContent() {
           </button>
         )}
 
-        {Boolean(paidCurrentPlanId) && hasPaid && (
+        {Boolean(paidCurrentPlanId) && hasPaid && user?.hasBillingSubscription && !onInvitedPartner && (
           <button
             type="button"
             className="btn btn-outline"

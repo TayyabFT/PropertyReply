@@ -69,6 +69,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!user?.onInvitedPartner || !user.invitedPartnerEndsAt) return;
+    const expires = new Date(user.invitedPartnerEndsAt).getTime();
+    let timer: number;
+    const checkExpiry = () => {
+      if (Date.now() >= expires) {
+        setUser((current) => current?.plan === "InvitedPartner" ? {
+          ...current, onInvitedPartner: false, hasPaidPlan: false,
+          partnerListingsHidden: true, successFeeRate: 0.1,
+        } : current);
+      } else {
+        timer = window.setTimeout(checkExpiry, Math.min(expires - Date.now(), 2147483647));
+      }
+    };
+    checkExpiry();
+    return () => window.clearTimeout(timer);
+  }, [user]);
+
+  useEffect(() => {
     async function restoreSession() {
       const savedToken = readToken();
       if (!savedToken) {

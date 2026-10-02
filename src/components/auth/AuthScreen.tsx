@@ -51,7 +51,9 @@ function PasswordField({
   );
 }
 
-export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
+export default function AuthScreen({ mode, nextPath }: { mode: "login" | "register"; nextPath?: string }) {
+  const safeNext = typeof nextPath === "string" && nextPath.startsWith("/") && !nextPath.startsWith("//") && !nextPath.includes("\\") ? nextPath : "";
+  const authQuery = safeNext ? `?next=${encodeURIComponent(safeNext)}` : "";
   const router = useRouter();
   const { login, register, loading, user } = useAuth();
   const [email, setEmail] = useState("");
@@ -84,10 +86,11 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
           password,
         });
         // Choose free trial or paid plan after signup
-        router.push("/app/membership");
+        router.push(safeNext || "/app/membership");
         return;
       }
       const loggedInUser = await login(email, password);
+      if (safeNext) { router.push(safeNext); return; }
       // Returning members with access go to the app; others choose a plan/trial
       const nextUser = loggedInUser ?? user;
       if (
@@ -242,12 +245,12 @@ export default function AuthScreen({ mode }: { mode: "login" | "register" }) {
             <p className="auth-switch">
               {isRegister ? (
                 <>
-                  Already have an account? <Link href="/login">Sign in</Link>
+                  Already have an account? <Link href={`/login${authQuery}`}>Sign in</Link>
                 </>
               ) : (
                 <>
                   New to PropertyReply?{" "}
-                  <Link href="/register">Create an account</Link>
+                  <Link href={`/register${authQuery}`}>Create an account</Link>
                 </>
               )}
             </p>

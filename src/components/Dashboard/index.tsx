@@ -213,7 +213,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p style={{ fontSize: ".75rem", color: "var(--slate)" }}>
-                  {membership.onTrial ? "Ends" : "Renews"}
+                  {membership.onTrial || membership.onInvitedPartner ? "Ends" : "Renews"}
                 </p>
                 <p style={{ fontWeight: 600 }}>{membership.renewsAt}</p>
               </div>
@@ -226,7 +226,9 @@ export default function Dashboard() {
             </div>
             <div className="divider"></div>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              {membership.onTrial ? (
+              {membership.onInvitedPartner ? (
+                <Link href="/app/membership" className="btn btn-gold btn-sm">View offer and membership</Link>
+              ) : membership.onTrial ? (
                 <Link href="/app/membership" className="btn btn-gold btn-sm">
                   Upgrade to Premium
                 </Link>
@@ -239,7 +241,7 @@ export default function Dashboard() {
                   Choose a Plan
                 </Link>
               ) : null}
-              {!membership.onTrial && membership.plan !== "None" && (
+              {!membership.onTrial && !membership.onInvitedPartner && membership.plan !== "None" && (
                 <>
                   <button className="btn btn-outline btn-sm">
                     Manage Billing

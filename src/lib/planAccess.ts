@@ -7,6 +7,7 @@ export const PUBLISH_REQUIRES_MEMBERSHIP_MESSAGE =
 export function userPlanLabel(user: ApiUser | null | undefined): string {
   if (!user) return "No Plan";
   if (user.role === "admin") return "Admin";
+  if (user.plan === "InvitedPartner") return userHasPlanAccess(user) ? "Invited Partner" : "Invited Partner · Ended";
   if (user.onCommercial || user.plan === "Commercial") return "Founders Club";
   if (user.onTrial || (user.plan && !user.hasPaidPlan && user.subscriptionStatus === "trialing")) {
     return "Free Trial";
@@ -33,6 +34,8 @@ export function userPlanLabel(user: ApiUser | null | undefined): string {
 export function userHasPlanAccess(user: ApiUser | null | undefined): boolean {
   if (!user) return false;
   if (user.role === "admin") return true;
+  if (user.plan === "InvitedPartner") return Boolean(user.subscriptionStatus === "active" && user.invitedPartnerEndsAt && new Date(user.invitedPartnerEndsAt) > new Date());
+  if (user.invitedPartnerStartedAt) return Boolean(user.hasPaidPlan && user.subscriptionStatus === "active");
   if (user.onCommercial || user.plan === "Commercial") return true;
   if (!user.plan) return false;
 
@@ -57,6 +60,7 @@ export function userHasPaidSubscription(
 ): boolean {
   if (!user) return false;
   if (user.role === "admin") return true;
+  if (user.plan === "InvitedPartner") return userHasPlanAccess(user);
   if (typeof user.hasPaidPlan === "boolean") return user.hasPaidPlan;
   if (user.onCommercial || user.plan === "Commercial") return true;
   return user.subscriptionStatus === "active" && Boolean(user.plan) && !user.onTrial;
@@ -65,6 +69,7 @@ export function userHasPaidSubscription(
 /** One-time free trial still available */
 export function userCanStartTrial(user: ApiUser | null | undefined): boolean {
   if (!user || user.role === "admin") return false;
+  if (user.invitedPartnerStartedAt) return false;
   if (typeof user.canStartTrial === "boolean") return user.canStartTrial;
   if (user.onTrial || userHasPaidSubscription(user)) return false;
   return !user.trialEndsAt;

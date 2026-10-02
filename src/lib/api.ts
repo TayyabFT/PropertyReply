@@ -1,6 +1,12 @@
-const API_URL = "https://property-relpy-backend.vercel.app/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://property-relpy-backend.vercel.app/api";
 
 export type ApiUser = {
+  onInvitedPartner?: boolean;
+  invitedPartnerStartedAt?: string | null;
+  invitedPartnerEndsAt?: string | null;
+  partnerListingsHidden?: boolean;
+  hasBillingSubscription?: boolean;
+  successFeeRate?: number;
   id: string;
   firstName: string;
   lastName: string;
@@ -195,6 +201,7 @@ export type OverviewStat = {
 };
 
 export type OverviewMembership = {
+  onInvitedPartner?: boolean;
   plan: string;
   status: string;
   billingLabel: string;
@@ -1343,6 +1350,28 @@ export const kycApi = {
         message: string;
       };
     }>("/kyc/start-verification", { method: "POST" }, token);
+  },
+};
+
+export type PartnerInvite = {
+  id: string; code: string; email: string; note: string; status: string;
+  expiresAt: string; usedAt: string | null; offerEndsAt: string | null; inviteUrl: string;
+};
+
+export const partnerInvitesApi = {
+  list(token: string) {
+    return request<{ success: boolean; data: PartnerInvite[] }>("/partner-invites", {}, token);
+  },
+  create(token: string, body: { email: string; note: string; daysValid: number }) {
+    return request<{ success: boolean; data: PartnerInvite }>("/partner-invites", { method: "POST", body: JSON.stringify(body) }, token);
+  },
+  revoke(token: string, id: string) {
+    return request<{ success: boolean; data: PartnerInvite }>(`/partner-invites/${id}/revoke`, { method: "POST" }, token);
+  },
+  accept(token: string, code: string, acknowledgeCancellation: boolean) {
+    return request<{ success: boolean; data: { user: ApiUser } }>("/partner-invites/accept", {
+      method: "POST", body: JSON.stringify({ code, acknowledgeCancellation }),
+    }, token);
   },
 };
 

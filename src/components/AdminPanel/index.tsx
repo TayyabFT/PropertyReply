@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth";
+import PartnerInvites from "./PartnerInvites";
 import {
   adminApi,
   ApiRequestError,
@@ -19,6 +20,7 @@ const adminNav: { label: string; target: string }[] = [
   { label: "👥 Users", target: "admin-users" },
   { label: "🛡 Admins", target: "admin-admins" },
   { label: "🏛 Founders Club", target: "admin-founders" },
+  { label: "✉ Invited Partners", target: "admin-partner-invites" },
   { label: "🏷 Live Listings", target: "admin-listings" },
   { label: "⚑ Reports", target: "admin-reports" },
 ];
@@ -266,7 +268,7 @@ export default function AdminPanel() {
 
     let partnerFeeGBP: number | undefined;
     const partnerFeeInput = window.prompt(
-      "If the seller is on Founders Club, enter their fee/remuneration received (GBP).\nLeave blank for standard 10% of sale price.",
+      "Only for Founders Club: enter partner remuneration (GBP). Leave blank for Invited Partners and other members. Their fee is calculated from the sale price using their current offer status.",
     );
     if (partnerFeeInput && partnerFeeInput.trim()) {
       partnerFeeGBP = Number(partnerFeeInput.replace(/[^0-9.]/g, ""));
@@ -278,15 +280,13 @@ export default function AdminPanel() {
 
     setBusyId(listing.id);
     try {
-      await adminApi.markSold(token, listing.id, salePrice, partnerFeeGBP);
+      const sold = await adminApi.markSold(token, listing.id, salePrice, partnerFeeGBP);
       if (token) {
         const res = await adminApi.getListings(token);
         setListings(res.data);
       }
       showToast(
-        partnerFeeGBP
-          ? "Marked sold — 5% Founders Club success fee invoice sent."
-          : "Listing marked as sold — a 10% commission invoice was sent.",
+        `Listing marked as sold — a ${Math.round(Number(sold.data.rate) * 100)}% success fee invoice was sent.`,
       );
     } catch (err) {
       showToast(
@@ -630,6 +630,7 @@ export default function AdminPanel() {
                     <option value="VIP">VIP</option>
                     <option value="Ultra">Ultra</option>
                     <option value="Commercial">Founders Club</option>
+                    <option value="InvitedPartner">Invited Partner</option>
                   </select>
                   <button className="btn btn-outline btn-sm" type="submit">
                     Search
@@ -676,6 +677,7 @@ export default function AdminPanel() {
                               <option value="VIP">VIP</option>
                               <option value="Ultra">Ultra</option>
                               <option value="Commercial">Founders Club</option>
+                              {row.plan === "InvitedPartner" && <option value="InvitedPartner" disabled>Invited Partner</option>}
                             </select>
                           </td>
                           <td>
@@ -881,6 +883,7 @@ export default function AdminPanel() {
               </div>
             </div>
 
+            <PartnerInvites />
             <div className="admin-card" id="admin-founders">
               <div className="admin-card-header">
                 <h3>🏛 Founders Club — Commercial Partnership Invites</h3>
@@ -1054,7 +1057,7 @@ export default function AdminPanel() {
                         <th>Asking Price</th>
                         <th>Status</th>
                         <th>Sale Price</th>
-                        <th>Commission (10%)</th>
+                        <th>Success fee</th>
                         <th>Actions</th>
                       </tr>
                     </thead>

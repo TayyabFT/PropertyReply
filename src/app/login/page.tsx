@@ -1,5 +1,5 @@
 import AuthScreen from "@/components/auth/AuthScreen";
 
-export default function LoginPage() {
-  return <AuthScreen mode="login" />;
+export default function LoginPage({ searchParams }: { searchParams: { next?: string } }) {
+  return <AuthScreen mode="login" nextPath={searchParams.next} />;
 }

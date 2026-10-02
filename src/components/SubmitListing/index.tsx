@@ -853,7 +853,9 @@ export default function SubmitListing() {
               <span>⚠️</span>
               <div>
                 {canPublish ? (
-                  user?.onCommercial ? (
+                  user?.onInvitedPartner ? (
+                    <>Invited Partner: publishing is free. During your two-month offer the success fee is 5% of sale price, then 10%. After expiry your listings are hidden until you subscribe.</>
+                  ) : user?.onCommercial && !user.invitedPartnerStartedAt ? (
                     <>
                       Founders Club: listings are free to publish. A 5% success
                       fee applies when deals complete. Listings are reviewed
