@@ -1,4 +1,10 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://property-relpy-backend.vercel.app/api";
+const configuredApiUrl = (
+  process.env.NEXT_PUBLIC_API_URL?.trim() || "https://property-relpy-backend.vercel.app/api"
+).replace(/\/+$/, "");
+// Accept either the backend origin or its /api URL in deployment settings.
+const API_URL = configuredApiUrl.endsWith("/api")
+  ? configuredApiUrl
+  : `${configuredApiUrl}/api`;
 
 export type ApiUser = {
   onInvitedPartner?: boolean;
