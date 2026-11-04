@@ -455,7 +455,8 @@ function MembershipContent() {
         >
           One free 7-day trial per account. Publishing listings is free for
           members. Founders Club partners pay a 5% success fee on completed
-          deals. Plans billed monthly; cancel anytime.
+          deals. Plans billed monthly; Premium can be cancelled anytime.
+          Founders Club is a fixed 12-month term.
         </p>
       </div>
     </section>
