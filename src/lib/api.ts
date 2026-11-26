@@ -1087,6 +1087,34 @@ export type AdminListing = {
   commissionInvoiceStatus: string;
 };
 
+export type AdminListingDetail = {
+  id: string;
+  title: string;
+  location: string;
+  postcode: string;
+  propertyType: string;
+  bedrooms: number;
+  status: string;
+  accessTier: string;
+  featured: boolean;
+  askingPrice: string;
+  marketValue: string;
+  discountPercent: number;
+  yieldPercent: number | null;
+  strategies: string[];
+  tags: { label: string; badge?: string }[];
+  description: string;
+  sellerName: string;
+  saveCount: number;
+  publishedAt: string | null;
+  soldAt: string | null;
+  salePrice: string | null;
+  commissionGBP: string | null;
+  commissionInvoiceStatus: string;
+  submittedBy: { id: string; name: string; email: string; plan: string | null } | null;
+  contact: { name: string; role: string; email: string; phone: string } | null;
+};
+
 export type CommercialInvite = {
   id: string;
   code: string;
@@ -1223,6 +1251,14 @@ export const adminApi = {
   getListings(token: string, page = 1) {
     return request<AdminListingsPayload>(
       withPage("/admin/listings", page),
+      { method: "GET" },
+      token,
+    );
+  },
+
+  getListing(token: string, id: string) {
+    return request<{ success: boolean; data: AdminListingDetail }>(
+      `/admin/listings/${id}`,
       { method: "GET" },
       token,
     );

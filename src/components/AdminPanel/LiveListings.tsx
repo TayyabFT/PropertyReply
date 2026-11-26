@@ -1,18 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { adminApi, type AdminListing } from "@/lib/api";
+import { adminApi } from "@/lib/api";
 import Pagination from "@/components/Pagination";
+import AdminListingModal from "./AdminListingModal";
 import { AdminPage, ListState, errorMessage, usePagedList, useToast } from "./shared";
 
 export default function LiveListings() {
   const { token } = useAuth();
   const { showToast, toastElement } = useToast();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
   const list = usePagedList((authToken, page) => adminApi.getListings(authToken, page));
+  const closeDetail = useCallback(() => setOpenId(null), []);
 
-  const markSold = async (listing: AdminListing) => {
+  const markSold = async (listing: { id: string; title: string }) => {
     if (!token) return;
     const input = window.prompt(`Enter the final sale price for "${listing.title}" (GBP):`);
     if (!input) return;
@@ -37,6 +40,7 @@ export default function LiveListings() {
     setBusyId(listing.id);
     try {
       const sold = await adminApi.markSold(token, listing.id, salePrice, partnerFeeGBP);
+      setOpenId(null);
       list.reload();
       showToast(`Listing marked as sold — a ${Math.round(Number(sold.data.rate) * 100)}% success fee invoice was sent.`);
     } catch (err) {
@@ -47,7 +51,7 @@ export default function LiveListings() {
   };
 
   return (
-    <AdminPage title="Live Listings" description="Mark a listing as sold to send the seller their success fee invoice.">
+    <AdminPage title="Live Listings" description="Click a listing to see its full details. Mark a listing as sold to send the seller their success fee invoice.">
       {toastElement}
       <div className="admin-card">
         <div className="admin-card-header"><h3>🏷 Live and sold listings ({list.pagination?.total ?? 0})</h3></div>
@@ -67,9 +71,15 @@ export default function LiveListings() {
               </thead>
               <tbody>
                 {list.items.map((row) => (
-                  <tr key={row.id}>
+                  <tr key={row.id} onClick={() => setOpenId(row.id)} style={{ cursor: "pointer" }}>
                     <td>
-                      <strong>{row.title}</strong>
+                      <button
+                        type="button"
+                        onClick={(event) => { event.stopPropagation(); setOpenId(row.id); }}
+                        style={{ background: "none", border: 0, padding: 0, font: "inherit", color: "inherit", textAlign: "left", cursor: "pointer" }}
+                      >
+                        <strong style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>{row.title}</strong>
+                      </button>
                       <div style={{ fontSize: ".74rem", color: "var(--slate)" }}>{row.location}</div>
                     </td>
                     <td className="mono">{row.askingPrice}</td>
@@ -78,12 +88,17 @@ export default function LiveListings() {
                     <td className="mono amber">
                       {row.commissionGBP ? `${row.commissionGBP} (${row.commissionInvoiceStatus})` : "—"}
                     </td>
-                    <td>
-                      {row.status !== "sold" && (
-                        <button className="btn btn-gold btn-sm" disabled={busyId === row.id} onClick={() => markSold(row)}>
-                          Mark as Sold
+                    <td onClick={(event) => event.stopPropagation()}>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        <button className="btn btn-outline btn-sm" onClick={() => setOpenId(row.id)}>
+                          View
                         </button>
-                      )}
+                        {row.status !== "sold" && (
+                          <button className="btn btn-gold btn-sm" disabled={busyId === row.id} onClick={() => markSold(row)}>
+                            Mark as Sold
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -93,6 +108,12 @@ export default function LiveListings() {
           <Pagination pagination={list.pagination} onChange={list.setPage} disabled={list.loading} />
         </div>
       </div>
+      <AdminListingModal
+        listingId={openId}
+        onClose={closeDetail}
+        onMarkSold={markSold}
+        busy={busyId !== null}
+      />
     </AdminPage>
   );
 }
