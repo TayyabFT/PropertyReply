@@ -102,6 +102,16 @@ export function IconAdmin({ className }: IconProps) {
   );
 }
 
+export function IconAffiliate({ className }: IconProps) {
+  return (
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="7" r="4" />
+      <path d="M2 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2" />
+      <path d="M19 8v6M16 11h6" />
+    </svg>
+  );
+}
+
 export function IconSearch({ className }: IconProps) {
   return (
     <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -119,6 +129,7 @@ const navIconMap: Record<string, ComponentType<IconProps>> = {
   enquiries: IconMessage,
   notifications: IconBell,
   membership: IconCard,
+  affiliate: IconAffiliate,
   profile: IconUser,
   kyc: IconShield,
   admin: IconAdmin,

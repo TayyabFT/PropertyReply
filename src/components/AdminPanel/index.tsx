@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth";
 import PartnerInvites from "./PartnerInvites";
+import Affiliates from "./Affiliates";
 import {
   adminApi,
   ApiRequestError,
@@ -21,6 +22,7 @@ const adminNav: { label: string; target: string }[] = [
   { label: "🛡 Admins", target: "admin-admins" },
   { label: "🏛 Founders Club", target: "admin-founders" },
   { label: "✉ Invited Partners", target: "admin-partner-invites" },
+  { label: "🤝 Affiliates", target: "admin-affiliates" },
   { label: "🏷 Live Listings", target: "admin-listings" },
   { label: "⚑ Reports", target: "admin-reports" },
 ];
@@ -884,6 +886,7 @@ export default function AdminPanel() {
             </div>
 
             <PartnerInvites />
+            <Affiliates />
             <div className="admin-card" id="admin-founders">
               <div className="admin-card-header">
                 <h3>🏛 Founders Club — Commercial Partnership Invites</h3>

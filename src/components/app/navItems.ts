@@ -3,6 +3,8 @@ export type NavItem = {
   label: string;
   icon: string;
   badge?: string;
+  /** Only shown to accounts an admin has made affiliates */
+  affiliateOnly?: boolean;
 };
 
 export type NavGroup = {
@@ -26,6 +28,7 @@ export const navGroups: NavGroup[] = [
     label: "Account",
     items: [
       { href: "/app/membership", label: "Membership", icon: "💳" },
+      { href: "/app/affiliate", label: "Affiliate", icon: "🤝", affiliateOnly: true },
       { href: "/app/profile", label: "Profile", icon: "👤" },
       { href: "/app/kyc", label: "KYC / Compliance", icon: "✅" },
     ],

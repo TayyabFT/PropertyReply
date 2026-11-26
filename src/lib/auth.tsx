@@ -23,6 +23,7 @@ type AuthContextValue = {
     lastName: string;
     email: string;
     password: string;
+    referralCode?: string;
   }) => Promise<void>;
   signOut: () => Promise<void>;
   updateUser: (user: User) => void;
@@ -138,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       lastName: string;
       email: string;
       password: string;
+      referralCode?: string;
     }) => {
       setLoading(true);
       try {

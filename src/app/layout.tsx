@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./modern.css";
 import { AuthProvider } from "@/lib/auth";
+import ReferralCapture from "@/components/ReferralCapture";
 
 export const metadata: Metadata = {
   title: "Property Reply — BMV Marketplace",
@@ -42,6 +43,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <ReferralCapture />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

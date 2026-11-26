@@ -42,7 +42,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         {visibleGroups.map((group) => (
           <div key={group.label}>
             <div className="app-nav-label">{group.label}</div>
-            {group.items.map((item) => {
+            {group.items.filter((item) => !item.affiliateOnly || user?.isAffiliate).map((item) => {
               const active = pathname.startsWith(item.href);
               return (
                 <Link

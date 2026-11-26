@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import BrandLogo from "@/components/BrandLogo";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 import { ApiRequestError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { clearReferralCode, readReferralCode } from "@/lib/referral";
 
 function PasswordField({
   label,
@@ -61,9 +62,18 @@ export default function AuthScreen({ mode, nextPath }: { mode: "login" | "regist
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [error, setError] = useState("");
 
   const isRegister = mode === "register";
+
+  // Prefill from a ?ref= link or a referral remembered from an earlier visit
+  useEffect(() => {
+    if (!isRegister) return;
+    const fromUrl = new URLSearchParams(window.location.search).get("ref")?.trim().toUpperCase();
+    const code = fromUrl || readReferralCode();
+    if (code) setReferralCode(code);
+  }, [isRegister]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -84,7 +94,9 @@ export default function AuthScreen({ mode, nextPath }: { mode: "login" | "regist
           lastName,
           email,
           password,
+          referralCode: referralCode.trim() || undefined,
         });
+        clearReferralCode();
         // Choose free trial or paid plan after signup
         router.push(safeNext || "/app/membership");
         return;
@@ -195,6 +207,20 @@ export default function AuthScreen({ mode, nextPath }: { mode: "login" | "regist
                 minLength={8}
                 autoComplete="new-password"
               />
+            )}
+
+            {isRegister && (
+              <div className="form-group">
+                <label>Referral Code (optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. ALI123"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  maxLength={20}
+                  autoComplete="off"
+                />
+              </div>
             )}
 
             {!isRegister && (

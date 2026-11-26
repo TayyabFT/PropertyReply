@@ -35,6 +35,8 @@ export type ApiUser = {
   /** True when the user may still opt in to a one-time free trial */
   canStartTrial?: boolean;
   role: "user" | "admin";
+  /** True when an admin has made this account an affiliate (marketer) */
+  isAffiliate?: boolean;
   status: "active" | "suspended" | "banned";
   kycStatus?:
     | "pending"
@@ -114,6 +116,7 @@ export const authApi = {
     lastName: string;
     email: string;
     password: string;
+    referralCode?: string;
   }) {
     return request<AuthPayload>("/auth/register", {
       method: "POST",
@@ -1378,6 +1381,71 @@ export const partnerInvitesApi = {
     return request<{ success: boolean; data: { user: ApiUser } }>("/partner-invites/accept", {
       method: "POST", body: JSON.stringify({ code, acknowledgeCancellation }),
     }, token);
+  },
+};
+
+export type AffiliateSummary = {
+  id: string;
+  code: string;
+  link: string;
+  commissionGBP: number;
+  status: "active" | "paused";
+  note: string;
+  clicks: number;
+  createdAt: string;
+  user: { id: string; name: string; email: string } | null;
+  signups: number;
+  payingCustomers: number;
+  pendingGBP: number;
+  paidGBP: number;
+};
+
+export type AffiliateReport = AffiliateSummary & {
+  referrals: Array<{
+    id: string;
+    name: string;
+    /** Admin view only */
+    email?: string;
+    plan?: string | null;
+    joinedAt: string;
+    commission: {
+      id: string;
+      amountGBP: number;
+      status: "pending" | "paid" | "void";
+      earnedAt: string;
+      paidAt: string | null;
+      voidReason?: string;
+    } | null;
+  }>;
+  payouts: Array<{ id: string; amountGBP: number; commissionCount: number; reference: string; paidAt: string }>;
+};
+
+type AffiliateReportPayload = { success: boolean; data: AffiliateReport };
+
+export const affiliatesApi = {
+  click(code: string) {
+    return request<{ success: boolean; data: { valid: boolean } }>("/affiliates/click", { method: "POST", body: JSON.stringify({ code }) });
+  },
+  mine(token: string) {
+    return request<AffiliateReportPayload>("/affiliates/me", {}, token);
+  },
+  list(token: string) {
+    return request<{ success: boolean; data: AffiliateSummary[] }>("/affiliates", {}, token);
+  },
+  detail(token: string, id: string) {
+    return request<AffiliateReportPayload>(`/affiliates/${id}`, {}, token);
+  },
+  create(token: string, body: { email: string; code?: string; commissionGBP?: number; note?: string }) {
+    return request<AffiliateReportPayload>("/affiliates", { method: "POST", body: JSON.stringify(body) }, token);
+  },
+  update(token: string, id: string, body: { status?: "active" | "paused"; commissionGBP?: number; note?: string }) {
+    return request<AffiliateReportPayload>(`/affiliates/${id}`, { method: "PATCH", body: JSON.stringify(body) }, token);
+  },
+  markPaid(token: string, id: string, reference: string) {
+    return request<AffiliateReportPayload>(`/affiliates/${id}/payouts`, { method: "POST", body: JSON.stringify({ reference }) }, token);
+  },
+  voidCommission(token: string, commissionId: string, reason: string) {
+    return request<AffiliateReportPayload>(`/affiliates/commissions/${commissionId}/void`, { method: "POST", body: JSON.stringify({ reason }) }, token);
   },
 };
 

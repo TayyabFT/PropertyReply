@@ -27,7 +27,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       pathname.startsWith("/app/membership") ||
       pathname.startsWith("/app/submit") ||
       pathname.startsWith("/app/kyc") ||
-      pathname.startsWith("/app/profile");
+      pathname.startsWith("/app/profile") ||
+      // Marketers don't need a plan to see their affiliate stats
+      (Boolean(user.isAffiliate) && pathname.startsWith("/app/affiliate"));
 
     if (!allowedWithoutPlan) {
       router.replace("/app/membership");
