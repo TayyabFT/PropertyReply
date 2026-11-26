@@ -70,6 +70,22 @@ type MePayload = {
   };
 };
 
+/** Server-side pagination metadata returned alongside paged lists */
+export type Pagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasPrev: boolean;
+  hasNext: boolean;
+};
+
+export type PagedPayload<T> = { success: boolean; data: T[]; pagination: Pagination };
+
+function withPage(path: string, page = 1) {
+  return `${path}${path.includes("?") ? "&" : "?"}page=${page}`;
+}
+
 export class ApiRequestError extends Error {
   status: number;
 
@@ -694,7 +710,7 @@ export type EnquiryDetail = EnquiryListItem & {
 };
 
 export const enquiriesApi = {
-  list(token: string, box: "all" | "inbox" | "sent" = "all") {
+  list(token: string, box: "all" | "inbox" | "sent" = "all", page = 1) {
     return request<{
       success: boolean;
       data: {
@@ -704,8 +720,9 @@ export const enquiriesApi = {
         sentUnread?: number;
         total: number;
         enquiries: EnquiryListItem[];
+        pagination: Pagination;
       };
-    }>(`/enquiries?box=${box}`, { method: "GET" }, token);
+    }>(withPage(`/enquiries?box=${box}`, page), { method: "GET" }, token);
   },
 
   unreadCount(token: string) {
@@ -968,9 +985,9 @@ export const submitApi = {
     );
   },
 
-  getSubmissions(token: string) {
-    return request<SubmissionsListPayload>(
-      "/submit/submissions",
+  getSubmissions(token: string, page = 1) {
+    return request<PagedPayload<Submission>>(
+      withPage("/submit/submissions", page),
       { method: "GET" },
       token,
     );
@@ -1070,18 +1087,33 @@ export type AdminListing = {
   commissionInvoiceStatus: string;
 };
 
+export type CommercialInvite = {
+  id: string;
+  code: string;
+  email: string | null;
+  note: string;
+  status: string;
+  expiresAt: string | null;
+  usedAt: string | null;
+  usedBy: string | null;
+  usedByEmail: string | null;
+  createdBy: string | null;
+  inviteUrl: string;
+  createdAt: string;
+};
+
 type AdminStatsPayload = { success: boolean; data: AdminStats };
-type AdminSubmissionsPayload = { success: boolean; data: AdminSubmission[] };
-type AdminUsersPayload = { success: boolean; data: AdminUser[] };
+type AdminSubmissionsPayload = PagedPayload<AdminSubmission>;
+type AdminUsersPayload = PagedPayload<AdminUser>;
 type AdminUserPayload = { success: boolean; message?: string; data: AdminUser };
-type AdminAccountsPayload = { success: boolean; data: AdminAccount[] };
+type AdminAccountsPayload = PagedPayload<AdminAccount>;
 type AdminAccountPayload = {
   success: boolean;
   message?: string;
   data: AdminAccount;
 };
-type AdminReportsPayload = { success: boolean; data: AdminReport[] };
-type AdminListingsPayload = { success: boolean; data: AdminListing[] };
+type AdminReportsPayload = PagedPayload<AdminReport>;
+type AdminListingsPayload = PagedPayload<AdminListing>;
 type AdminActionPayload = {
   success: boolean;
   message?: string;
@@ -1093,9 +1125,9 @@ export const adminApi = {
     return request<AdminStatsPayload>("/admin/stats", { method: "GET" }, token);
   },
 
-  getSubmissions(token: string, status = "pending") {
+  getSubmissions(token: string, status = "pending", page = 1) {
     return request<AdminSubmissionsPayload>(
-      `/admin/submissions?status=${encodeURIComponent(status)}`,
+      withPage(`/admin/submissions?status=${encodeURIComponent(status)}`, page),
       { method: "GET" },
       token,
     );
@@ -1119,15 +1151,14 @@ export const adminApi = {
 
   getUsers(
     token: string,
-    params: { search?: string; plan?: string; status?: string } = {},
+    params: { search?: string; plan?: string; status?: string; page?: number } = {},
   ) {
-    const query = new URLSearchParams();
+    const query = new URLSearchParams({ page: String(params.page ?? 1) });
     if (params.search) query.set("search", params.search);
     if (params.plan) query.set("plan", params.plan);
     if (params.status) query.set("status", params.status);
-    const qs = query.toString();
     return request<AdminUsersPayload>(
-      `/admin/users${qs ? `?${qs}` : ""}`,
+      `/admin/users?${query.toString()}`,
       { method: "GET" },
       token,
     );
@@ -1153,9 +1184,9 @@ export const adminApi = {
     );
   },
 
-  getAdmins(token: string) {
+  getAdmins(token: string, page = 1) {
     return request<AdminAccountsPayload>(
-      "/admin/admins",
+      withPage("/admin/admins", page),
       { method: "GET" },
       token,
     );
@@ -1177,8 +1208,8 @@ export const adminApi = {
     );
   },
 
-  getReports(token: string) {
-    return request<AdminReportsPayload>("/admin/reports", { method: "GET" }, token);
+  getReports(token: string, page = 1) {
+    return request<AdminReportsPayload>(withPage("/admin/reports", page), { method: "GET" }, token);
   },
 
   resolveReport(token: string, id: string) {
@@ -1189,9 +1220,9 @@ export const adminApi = {
     );
   },
 
-  getListings(token: string) {
+  getListings(token: string, page = 1) {
     return request<AdminListingsPayload>(
-      "/admin/listings",
+      withPage("/admin/listings", page),
       { method: "GET" },
       token,
     );
@@ -1219,24 +1250,8 @@ export const adminApi = {
     );
   },
 
-  getCommercialInvites(token: string) {
-    return request<{
-      success: boolean;
-      data: Array<{
-        id: string;
-        code: string;
-        email: string | null;
-        note: string;
-        status: string;
-        expiresAt: string | null;
-        usedAt: string | null;
-        usedBy: string | null;
-        usedByEmail: string | null;
-        createdBy: string | null;
-        inviteUrl: string;
-        createdAt: string;
-      }>;
-    }>("/admin/commercial-invites", { method: "GET" }, token);
+  getCommercialInvites(token: string, page = 1) {
+    return request<PagedPayload<CommercialInvite>>(withPage("/admin/commercial-invites", page), { method: "GET" }, token);
   },
 
   createCommercialInvite(
@@ -1292,12 +1307,13 @@ export type NotificationItem = {
 export type NotificationsData = {
   unreadCount: number;
   notifications: NotificationItem[];
+  pagination?: Pagination;
 };
 
 export const notificationsApi = {
-  list(token: string) {
+  list(token: string, page = 1) {
     return request<{ success: boolean; data: NotificationsData }>(
-      "/notifications",
+      withPage("/notifications", page),
       { method: "GET" },
       token,
     );
@@ -1368,8 +1384,8 @@ export type PartnerInvite = {
 };
 
 export const partnerInvitesApi = {
-  list(token: string) {
-    return request<{ success: boolean; data: PartnerInvite[] }>("/partner-invites", {}, token);
+  list(token: string, page = 1) {
+    return request<PagedPayload<PartnerInvite>>(withPage("/partner-invites", page), {}, token);
   },
   create(token: string, body: { email: string; note: string; daysValid: number }) {
     return request<{ success: boolean; data: PartnerInvite }>("/partner-invites", { method: "POST", body: JSON.stringify(body) }, token);
@@ -1417,6 +1433,7 @@ export type AffiliateReport = AffiliateSummary & {
       voidReason?: string;
     } | null;
   }>;
+  referralsPagination: Pagination;
   payouts: Array<{ id: string; amountGBP: number; commissionCount: number; reference: string; paidAt: string }>;
 };
 
@@ -1426,14 +1443,14 @@ export const affiliatesApi = {
   click(code: string) {
     return request<{ success: boolean; data: { valid: boolean } }>("/affiliates/click", { method: "POST", body: JSON.stringify({ code }) });
   },
-  mine(token: string) {
-    return request<AffiliateReportPayload>("/affiliates/me", {}, token);
+  mine(token: string, page = 1) {
+    return request<AffiliateReportPayload>(withPage("/affiliates/me", page), {}, token);
   },
-  list(token: string) {
-    return request<{ success: boolean; data: AffiliateSummary[] }>("/affiliates", {}, token);
+  list(token: string, page = 1) {
+    return request<PagedPayload<AffiliateSummary> & { totalUnpaidGBP: number }>(withPage("/affiliates", page), {}, token);
   },
-  detail(token: string, id: string) {
-    return request<AffiliateReportPayload>(`/affiliates/${id}`, {}, token);
+  detail(token: string, id: string, page = 1) {
+    return request<AffiliateReportPayload>(withPage(`/affiliates/${id}`, page), {}, token);
   },
   create(token: string, body: { email: string; code?: string; commissionGBP?: number; note?: string }) {
     return request<AffiliateReportPayload>("/affiliates", { method: "POST", body: JSON.stringify(body) }, token);

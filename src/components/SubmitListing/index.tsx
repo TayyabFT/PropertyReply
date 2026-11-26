@@ -15,8 +15,10 @@ import {
   type SubmitOptions,
   type SubmitPayload,
   type Submission,
+  type Pagination as PaginationMeta,
   ApiRequestError,
 } from "@/lib/api";
+import Pagination from "@/components/Pagination";
 import {
   PUBLISH_REQUIRES_MEMBERSHIP_MESSAGE,
   userHasPaidSubscription,
@@ -143,6 +145,7 @@ export default function SubmitListing() {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [drafts, setDrafts] = useState<Submission[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [submissionsPagination, setSubmissionsPagination] = useState<PaginationMeta | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
 
   const [loadingOptions, setLoadingOptions] = useState(true);
@@ -178,6 +181,7 @@ export default function SubmitListing() {
         setOptions(optionsRes.data);
         setDrafts(draftsRes.data);
         setSubmissions(submissionsRes.data);
+        setSubmissionsPagination(submissionsRes.pagination);
 
         if (paymentStatus === "success") {
           const paid = submissionsRes.data.some(
@@ -286,6 +290,18 @@ export default function SubmitListing() {
       ]);
       setDrafts(draftsRes.data);
       setSubmissions(submissionsRes.data);
+      setSubmissionsPagination(submissionsRes.pagination);
+    } catch {
+      // non-critical
+    }
+  };
+
+  const loadSubmissionsPage = async (page: number) => {
+    if (!token) return;
+    try {
+      const res = await submitApi.getSubmissions(token, page);
+      setSubmissions(res.data);
+      setSubmissionsPagination(res.pagination);
     } catch {
       // non-critical
     }
@@ -532,7 +548,7 @@ export default function SubmitListing() {
             <div className="flex-between mb-16">
               <h3>📋 My Submitted Listings</h3>
               <span style={{ fontSize: ".8rem", color: "var(--slate)" }}>
-                {submissions.length} total
+                {submissionsPagination?.total ?? submissions.length} total
               </span>
             </div>
             <div className="table-scroll">
@@ -581,6 +597,7 @@ export default function SubmitListing() {
               </tbody>
             </table>
             </div>
+            <Pagination pagination={submissionsPagination} onChange={loadSubmissionsPage} />
           </div>
         )}
 

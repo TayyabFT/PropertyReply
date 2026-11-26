@@ -105,8 +105,9 @@ export default function AuthScreen({ mode, nextPath }: { mode: "login" | "regist
       if (safeNext) { router.push(safeNext); return; }
       // Returning members with access go to the app; others choose a plan/trial
       const nextUser = loggedInUser ?? user;
-      if (
-        nextUser?.role === "admin" ||
+      if (nextUser?.role === "admin") {
+        router.push("/app/admin");
+      } else if (
         nextUser?.onTrial ||
         nextUser?.subscriptionStatus === "active"
       ) {

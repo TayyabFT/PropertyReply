@@ -7,6 +7,7 @@ import {
   type NotificationsData,
   ApiRequestError,
 } from "@/lib/api";
+import Pagination from "@/components/Pagination";
 
 export default function Notifications() {
   const { token } = useAuth();
@@ -14,6 +15,7 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [marking, setMarking] = useState(false);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!token) return;
@@ -24,7 +26,7 @@ export default function Notifications() {
       setLoading(true);
       setError(null);
       try {
-        const res = await notificationsApi.list(authToken);
+        const res = await notificationsApi.list(authToken, page);
         if (!cancelled) setData(res.data);
       } catch (err) {
         if (!cancelled) {
@@ -42,7 +44,7 @@ export default function Notifications() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, page]);
 
   const markAllRead = async () => {
     if (!token || !data || data.unreadCount === 0) return;
@@ -50,6 +52,7 @@ export default function Notifications() {
     try {
       await notificationsApi.markAllRead(token);
       setData({
+        ...data,
         unreadCount: 0,
         notifications: data.notifications.map((n) => ({ ...n, unread: false })),
       });
@@ -115,6 +118,9 @@ export default function Notifications() {
             )}
           </div>
         )}
+        <div style={{ maxWidth: "760px" }}>
+          <Pagination pagination={data?.pagination} onChange={setPage} disabled={loading} />
+        </div>
       </div>
     </section>
   );

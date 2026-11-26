@@ -36,10 +36,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [ready, user, pathname, router]);
 
-  // Restrict the admin area to admin accounts only.
+  // Restrict the admin area to admin accounts only, and land admins on it
+  // instead of the member dashboard.
   useEffect(() => {
-    if (ready && user && user.role !== "admin" && pathname.startsWith("/app/admin")) {
+    if (!ready || !user) return;
+    if (user.role !== "admin" && pathname.startsWith("/app/admin")) {
       router.replace("/app/dashboard");
+    } else if (user.role === "admin" && pathname === "/app/dashboard") {
+      router.replace("/app/admin");
     }
   }, [ready, user, pathname, router]);
 

@@ -13,6 +13,7 @@ import {
   ApiRequestError,
 } from "@/lib/api";
 import PropertyCard from "./PropertyCard";
+import Pagination from "@/components/Pagination";
 import ListingDetailModal from "./ListingDetailModal";
 
 const defaultFilters: ListingsQuery = {
@@ -26,17 +27,6 @@ const defaultFilters: ListingsQuery = {
   page: 1,
   limit: 6,
 };
-
-function buildPageNumbers(current: number, total: number) {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, index) => index + 1);
-  }
-
-  const pages = new Set<number>([1, total, current, current - 1, current + 1]);
-  return [...pages]
-    .filter((page) => page >= 1 && page <= total)
-    .sort((a, b) => a - b);
-}
 
 export default function BrowseListings() {
   const router = useRouter();
@@ -179,12 +169,6 @@ export default function BrowseListings() {
   const summaryText = listings?.summary.summaryText ?? "Loading deals…";
   const lastUpdated = listings?.summary.lastUpdated ?? "";
   const currentSort = appliedFilters.sort || "newest";
-  const pageNumbers = listings
-    ? buildPageNumbers(
-        listings.pagination.page,
-        listings.pagination.totalPages,
-      )
-    : [];
 
   return (
     <section className="section section-alt" id="listings">
@@ -380,51 +364,7 @@ export default function BrowseListings() {
           </p>
         )}
 
-        {listings && listings.pagination.totalPages > 1 && (
-          <div className="pagination">
-            <button
-              type="button"
-              className="pg-btn"
-              disabled={!listings.pagination.hasPrev}
-              onClick={() => goToPage(listings.pagination.page - 1)}
-            >
-              ‹
-            </button>
-            {pageNumbers.map((page, index) => {
-              const prev = pageNumbers[index - 1];
-              const showEllipsis = prev != null && page - prev > 1;
-
-              return (
-                <span key={page} style={{ display: "contents" }}>
-                  {showEllipsis && (
-                    <button type="button" className="pg-btn" disabled>
-                      …
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className={
-                      listings.pagination.page === page
-                        ? "pg-btn active"
-                        : "pg-btn"
-                    }
-                    onClick={() => goToPage(page)}
-                  >
-                    {page}
-                  </button>
-                </span>
-              );
-            })}
-            <button
-              type="button"
-              className="pg-btn"
-              disabled={!listings.pagination.hasNext}
-              onClick={() => goToPage(listings.pagination.page + 1)}
-            >
-              ›
-            </button>
-          </div>
-        )}
+        <Pagination pagination={listings?.pagination} onChange={goToPage} />
       </div>
 
       {detailLoading && (

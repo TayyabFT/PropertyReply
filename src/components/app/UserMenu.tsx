@@ -52,27 +52,39 @@ export default function UserMenu() {
           >
             <span>👤</span> Profile Settings
           </Link>
-          <Link
-            href="/app/membership"
-            className="user-menu-item"
-            onClick={() => setOpen(false)}
-          >
-            <span>💳</span> Membership
-          </Link>
-          <Link
-            href="/app/enquiries"
-            className="user-menu-item"
-            onClick={() => setOpen(false)}
-          >
-            <span>💬</span> Enquiries
-          </Link>
-          <Link
-            href="/app/kyc"
-            className="user-menu-item"
-            onClick={() => setOpen(false)}
-          >
-            <span>✅</span> KYC Status
-          </Link>
+          {user?.role === "admin" ? (
+            <Link
+              href="/app/admin"
+              className="user-menu-item"
+              onClick={() => setOpen(false)}
+            >
+              <span>🛡</span> Admin Overview
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/app/membership"
+                className="user-menu-item"
+                onClick={() => setOpen(false)}
+              >
+                <span>💳</span> Membership
+              </Link>
+              <Link
+                href="/app/enquiries"
+                className="user-menu-item"
+                onClick={() => setOpen(false)}
+              >
+                <span>💬</span> Enquiries
+              </Link>
+              <Link
+                href="/app/kyc"
+                className="user-menu-item"
+                onClick={() => setOpen(false)}
+              >
+                <span>✅</span> KYC Status
+              </Link>
+            </>
+          )}
           <button className="user-menu-item danger" onClick={handleSignOut}>
             <span>↩</span> Sign Out
           </button>

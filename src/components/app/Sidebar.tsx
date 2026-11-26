@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
-import { navGroups } from "./navItems";
+import { adminNavGroups, isNavItemActive, navGroups } from "./navItems";
 import { NavIcon } from "@/components/icons/NavIcons";
 import { useAuth } from "@/lib/auth";
 import { userPlanLabel } from "@/lib/planAccess";
@@ -17,15 +17,13 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
-  const visibleGroups = navGroups.filter(
-    (group) => group.label !== "Administration" || isAdmin,
-  );
+  const visibleGroups = isAdmin ? adminNavGroups : navGroups;
 
   return (
     <aside className="app-sidebar">
       <div className="app-sidebar-head">
         <BrandLogo
-          href="/app/dashboard"
+          href={isAdmin ? "/app/admin" : "/app/dashboard"}
           iconSize={38}
           onClick={onNavigate}
         />
@@ -43,7 +41,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <div key={group.label}>
             <div className="app-nav-label">{group.label}</div>
             {group.items.filter((item) => !item.affiliateOnly || user?.isAffiliate).map((item) => {
-              const active = pathname.startsWith(item.href);
+              const active = isNavItemActive(item, pathname);
               return (
                 <Link
                   key={item.href}

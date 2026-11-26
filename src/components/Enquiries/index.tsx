@@ -7,8 +7,10 @@ import {
   enquiriesApi,
   type EnquiryDetail,
   type EnquiryListItem,
+  type Pagination as PaginationMeta,
   ApiRequestError,
 } from "@/lib/api";
+import Pagination from "@/components/Pagination";
 
 type Box = "all" | "inbox" | "sent";
 
@@ -21,6 +23,8 @@ export default function Enquiries() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [thread, setThread] = useState<EnquiryDetail | null>(null);
@@ -33,14 +37,15 @@ export default function Enquiries() {
   activeIdRef.current = activeId;
 
   const loadList = useCallback(
-    async (nextBox: Box, soft = false) => {
+    async (nextBox: Box, nextPage: number, soft = false) => {
       if (!token) return;
       if (soft) setRefreshing(true);
       else setLoading(true);
       setError(null);
       try {
-        const res = await enquiriesApi.list(token, nextBox);
+        const res = await enquiriesApi.list(token, nextBox, nextPage);
         setItems(res.data.enquiries);
+        setPagination(res.data.pagination);
         setInboxUnread(res.data.inboxUnread ?? 0);
         setSentUnread(res.data.sentUnread ?? 0);
       } catch (err) {
@@ -90,20 +95,20 @@ export default function Enquiries() {
   );
 
   useEffect(() => {
-    loadList(box);
-  }, [box, loadList]);
+    loadList(box, page);
+  }, [box, page, loadList]);
 
   // Keep the open thread fresh so seller replies appear for the buyer
   useEffect(() => {
     if (!token) return;
     const timer = setInterval(() => {
-      loadList(box, true);
+      loadList(box, page, true);
       if (activeIdRef.current) {
         openThread(activeIdRef.current, true);
       }
     }, 8000);
     return () => clearInterval(timer);
-  }, [token, box, loadList, openThread]);
+  }, [token, box, page, loadList, openThread]);
 
   const visibleItems = useMemo(() => {
     if (box === "all") return items;
@@ -121,7 +126,7 @@ export default function Enquiries() {
       const res = await enquiriesApi.reply(token, activeId, reply.trim());
       setThread(res.data);
       setReply("");
-      await loadList(box, true);
+      await loadList(box, page, true);
     } catch (err) {
       setReplyError(
         err instanceof ApiRequestError
@@ -138,7 +143,7 @@ export default function Enquiries() {
     try {
       await enquiriesApi.close(token, activeId);
       if (thread) setThread({ ...thread, status: "closed", canReply: false });
-      await loadList(box, true);
+      await loadList(box, page, true);
     } catch {
       // non-critical
     }
@@ -146,6 +151,7 @@ export default function Enquiries() {
 
   const switchBox = (next: Box) => {
     setBox(next);
+    setPage(1);
     setActiveId(null);
     setThread(null);
     setReplyError(null);
@@ -290,6 +296,9 @@ export default function Enquiries() {
                   </button>
                 ))
               )}
+              <div style={{ padding: "0 12px" }}>
+                <Pagination pagination={pagination} onChange={setPage} disabled={refreshing} />
+              </div>
             </div>
 
             <div className="card" style={{ minHeight: "420px" }}>

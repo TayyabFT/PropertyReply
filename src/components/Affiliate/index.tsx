@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { affiliatesApi, type AffiliateReport } from "@/lib/api";
+import Pagination from "@/components/Pagination";
 import { affiliateMetrics, commissionBadge, formatDate, formatGBP } from "./format";
 
 export default function Affiliate() {
@@ -10,15 +11,16 @@ export default function Affiliate() {
   const [report, setReport] = useState<AffiliateReport | null>(null);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
-    affiliatesApi.mine(token)
+    affiliatesApi.mine(token, page)
       .then((res) => { if (!cancelled) setReport(res.data); })
       .catch((err) => { if (!cancelled) setError(err instanceof Error ? err.message : "Unable to load your affiliate stats."); });
     return () => { cancelled = true; };
-  }, [token]);
+  }, [token, page]);
 
   async function copy(value: string, label: string) {
     try { await navigator.clipboard.writeText(value); setCopied(`${label} copied.`); }
@@ -72,7 +74,7 @@ export default function Affiliate() {
           </div>
 
           <div className="admin-card">
-            <div className="admin-card-header"><h3>People you referred ({report.referrals.length})</h3></div>
+            <div className="admin-card-header"><h3>People you referred ({report.referralsPagination.total})</h3></div>
             <div className="admin-card-body" style={{ overflowX: "auto" }}>
               {report.referrals.length === 0 ? <p className="muted">No signups yet. Share your link to get started.</p> : (
                 <table className="admin-table">
@@ -87,6 +89,7 @@ export default function Affiliate() {
                   })}</tbody>
                 </table>
               )}
+              <Pagination pagination={report.referralsPagination} onChange={setPage} />
             </div>
           </div>
 
