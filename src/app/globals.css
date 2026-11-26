@@ -896,8 +896,34 @@
     border-radius: var(--radius-lg);
     width: 100%; max-width: 500px;
     padding: 32px;
+    /* Tall content scrolls inside the modal instead of running off-screen */
+    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
   .modal h3 { margin-bottom: 6px; }
+  .modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .modal-head h3 { min-width: 0; overflow-wrap: anywhere; }
+  .modal-head .btn { flex-shrink: 0; }
+  /* Keep the main actions reachable while the modal body scrolls.
+     Stretch over the modal's bottom padding so text can't show beneath. */
+  .modal { --modal-pad-bottom: 32px; }
+  .modal-actions {
+    position: sticky; bottom: calc(-1 * var(--modal-pad-bottom));
+    margin-bottom: calc(-1 * var(--modal-pad-bottom));
+    padding: 12px 0 var(--modal-pad-bottom);
+    display: flex; gap: 10px; flex-wrap: wrap;
+    background: var(--white);
+    border-top: 1px solid rgba(0,0,0,.06);
+  }
+  @media (max-width: 620px) {
+    .modal { --modal-pad-bottom: 20px; }
+    .modal-backdrop { padding: 12px; }
+    .modal { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
+    .modal-actions .btn { flex: 1 1 140px; justify-content: center; text-align: center; }
+  }
   .modal .sub { color: var(--slate); font-size: .85rem; margin-bottom: 24px; }
 
   /* ════════════════════════════════════════════════════════════

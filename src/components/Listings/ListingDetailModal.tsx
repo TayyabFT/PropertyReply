@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import type { ListingDetail } from "@/lib/api";
 
 type ListingDetailModalProps = {
@@ -12,6 +13,21 @@ export default function ListingDetailModal({
   listing,
   onClose,
 }: ListingDetailModalProps) {
+  // Stop the page behind from scrolling on phones; close with Escape
+  useEffect(() => {
+    if (!listing) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [listing, onClose]);
+
   if (!listing) return null;
 
   return (
@@ -23,7 +39,7 @@ export default function ListingDetailModal({
         aria-modal="true"
         aria-labelledby="listing-detail-title"
       >
-        <div className="flex-between mb-16">
+        <div className="modal-head mb-16">
           <h3 id="listing-detail-title">{listing.title}</h3>
           <button
             type="button"
@@ -39,7 +55,8 @@ export default function ListingDetailModal({
           {listing.location}
         </p>
 
-        <div className="grid-3" style={{ gap: "14px", marginBottom: "16px" }}>
+        {/* Stay three across on phones so the actions stay close to the top */}
+        <div className="grid-3" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px", marginBottom: "16px", overflowWrap: "anywhere" }}>
           <div>
             <p style={{ fontSize: ".75rem", color: "var(--slate)" }}>
               Asking Price
@@ -89,7 +106,7 @@ export default function ListingDetailModal({
           ))}
         </div>
 
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        <div className="modal-actions">
           <button type="button" className="btn btn-gold btn-sm" onClick={onClose}>
             Close
           </button>
